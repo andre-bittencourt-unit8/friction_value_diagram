@@ -8,6 +8,9 @@ import { needsLayout, autoLayout } from "./lib/layout";
 const SAVED_VISUALIZATION_KEY = "vfd_saved_visualization_v1";
 const DEFAULT_VFD_PATH = "/csr_authoring_process.json";
 const DEFAULT_VFD_FILE_NAME = "csr_authoring_process.json";
+const AUTH_SESSION_KEY = "vfd_auth_session_v1";
+const TEST_USERNAME = "reviewer";
+const TEST_PASSWORD = "velvet-orbit-cinder-saffron";
 type SaveStatus = "idle" | "saved" | "error";
 type ExportPayload = {
   diagramSvg: string;
@@ -46,7 +49,13 @@ function readSavedVisualization(): { fileName: string; data: any } | null {
   }
 }
 
+function readAuthSession(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.localStorage.getItem(AUTH_SESSION_KEY) === "authenticated";
+}
+
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => readAuthSession());
   const [vfdData, setVfdData] = useState<any>(null);
   const [fileName, setFileName] = useState("");
   const [validation, setValidation] = useState<ValidationResult | null>(null);
@@ -55,6 +64,9 @@ export default function App() {
   const [hasSavedVisualization, setHasSavedVisualization] = useState(() => !!readSavedVisualization());
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [loginUsername, setLoginUsername] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const handleLoad = async (raw: unknown, name: string) => {
     setUploadError(null);
@@ -88,6 +100,11 @@ export default function App() {
   };
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setIsBootstrapping(false);
+      return;
+    }
+
     let cancelled = false;
 
     const loadDefaultVisualization = async () => {
@@ -120,7 +137,23 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isAuthenticated]);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (loginUsername === TEST_USERNAME && loginPassword === TEST_PASSWORD) {
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(AUTH_SESSION_KEY, "authenticated");
+      }
+      setLoginError(null);
+      setIsAuthenticated(true);
+      setIsBootstrapping(true);
+      return;
+    }
+
+    setLoginError("Invalid username or password.");
+  };
 
   const handleRearrange = async () => {
     if (!vfdData || isLayouting) return;
@@ -206,6 +239,18 @@ export default function App() {
         setIsBootstrapping(false);
       }
     })();
+  };
+
+  const handleLogout = () => {
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(AUTH_SESSION_KEY);
+    }
+    setIsAuthenticated(false);
+    setVfdData(null);
+    setValidation(null);
+    setUploadError(null);
+    setLoginPassword("");
+    setLoginError(null);
   };
 
   const handleSaveVisualization = () => {
@@ -315,6 +360,113 @@ export default function App() {
         saveStatus={saveStatus}
         hasSavedVisualization={hasSavedVisualization}
       />
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#f8fafc",
+          color: "#0f172a",
+          fontFamily: "system-ui, sans-serif",
+          padding: 24,
+        }}
+      >
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 420,
+            background: "#ffffff",
+            border: "1px solid #dbe3ef",
+            borderRadius: 18,
+            padding: "28px 28px 24px 28px",
+            boxShadow: "0 18px 48px rgba(15, 23, 42, 0.08)",
+          }}
+        >
+          <div style={{ fontSize: 28, fontWeight: 900, lineHeight: 1.1, marginBottom: 10 }}>
+            Sign In
+          </div>
+          <div style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, marginBottom: 20 }}>
+            Enter the testing credentials to access the Clinical Study Report process viewer.
+          </div>
+          <form onSubmit={handleLogin} style={{ display: "grid", gap: 14 }}>
+            <label style={{ display: "grid", gap: 6 }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                Username
+              </span>
+              <input
+                value={loginUsername}
+                onChange={(e) => setLoginUsername(e.target.value)}
+                style={{
+                  width: "100%",
+                  boxSizing: "border-box",
+                  padding: "11px 12px",
+                  borderRadius: 10,
+                  border: "1px solid #cbd5e1",
+                  fontSize: 14,
+                  color: "#0f172a",
+                  background: "#ffffff",
+                }}
+              />
+            </label>
+            <label style={{ display: "grid", gap: 6 }}>
+              <span style={{ fontSize: 11, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                Password
+              </span>
+              <input
+                type="password"
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                style={{
+                  width: "100%",
+                  boxSizing: "border-box",
+                  padding: "11px 12px",
+                  borderRadius: 10,
+                  border: "1px solid #cbd5e1",
+                  fontSize: 14,
+                  color: "#0f172a",
+                  background: "#ffffff",
+                }}
+              />
+            </label>
+            {loginError ? (
+              <div
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  background: "#fef2f2",
+                  border: "1px solid #fecaca",
+                  color: "#b91c1c",
+                  fontSize: 13,
+                }}
+              >
+                {loginError}
+              </div>
+            ) : null}
+            <button
+              type="submit"
+              style={{
+                border: "1px solid #0f172a",
+                background: "#0f172a",
+                color: "#ffffff",
+                borderRadius: 999,
+                padding: "12px 16px",
+                fontSize: 13,
+                fontWeight: 800,
+                cursor: "pointer",
+                marginTop: 4,
+              }}
+            >
+              Sign In
+            </button>
+          </form>
+        </div>
+      </div>
     );
   }
 
