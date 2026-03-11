@@ -1,0 +1,186 @@
+{
+  "id": "csr_authoring_vfd",
+  "label": "Customer Success Report (CSR) Authoring Process",
+  "description": "VFD mapping the value creation and waste in CSR preparation workflow",
+  "nodes": [
+    {
+      "id": "v1",
+      "category": "value",
+      "label": "Analyze customer data",
+      "sublabel": "Extract insights",
+      "state": "homeostasis",
+      "stateRationale": "Running smoothly with predictable outputs",
+      "valueSpec": {
+        "inputSummary": "Raw customer usage data",
+        "outputSummary": "Trend analysis and anomalies",
+        "valueAdded": "Understanding customer health status"
+      },
+      "valueNatures": [
+        { "nature": "knowledge_generation", "isPrimary": true, "description": "Generates actionable insights about customer behavior" }
+      ],
+      "metrics": {
+        "cycleTime": { "value": "45", "unit": "min" },
+        "effort": { "value": "1", "unit": "person-day" },
+        "errorRate": { "value": 0.02, "unit": "%" }
+      },
+      "transformCharacter": "analytical",
+      "performer": {
+        "role": "CSR Analyst",
+        "team": "Customer Insights",
+        "orgRelation": "embedded",
+        "authority": { "priority": "high", "method": "automated_with_review", "resource": "dashboard" }
+      },
+      "x": 100,
+      "y": 100
+    },
+    {
+      "id": "v2",
+      "category": "value",
+      "label": "Compile narrative report",
+      "sublabel": "Structure findings",
+      "state": "homeostasis",
+      "valueSpec": {
+        "inputSummary": "Analysis results",
+        "outputSummary": "Draft CSR with recommendations",
+        "valueAdded": "Clear, actionable communication to customer"
+      },
+      "valueNatures": [
+        { "nature": "artifact_production", "isPrimary": true, "description": "Creates tangible CSR document" }
+      ],
+      "metrics": {
+        "cycleTime": { "value": "60", "unit": "min" },
+        "effort": { "value": "1.5", "unit": "person-day" }
+      },
+      "transformCharacter": "integrative",
+      "performer": {
+        "role": "CSR Writer",
+        "team": "Customer Insights",
+        "orgRelation": "embedded"
+      },
+      "x": 300,
+      "y": 100
+    },
+    {
+      "id": "e1",
+      "category": "enabling",
+      "label": "Data access permissions",
+      "state": "homeostasis",
+      "enablingSpec": {
+        "enablingType": "data_access",
+        "requiredBy": "v1 analysis step",
+        "eliminable": false
+      },
+      "performer": {
+        "role": "IT Security",
+        "orgRelation": "regulatory"
+      },
+      "x": 100,
+      "y": 20
+    },
+    {
+      "id": "w1",
+      "category": "waste",
+      "label": "Manual data gathering",
+      "wasteSpec": {
+        "wasteType": "rework",
+        "driver": "Inconsistent automation",
+        "parasitises": "v1",
+        "eliminationCondition": "Upgrade to fully automated data pipeline"
+      },
+      "x": 100,
+      "y": 200
+    },
+    {
+      "id": "void1",
+      "category": "value",
+      "state": "void",
+      "label": "Customer communication template engine",
+      "voidSpec": {
+        "absenceImpact": ["v2 requires manual narrative adaptation", "Inconsistent messaging across CSRs"],
+        "instantiationSketch": "Build reusable template system with conditional sections",
+        "feasibility": "high",
+        "effort": "3 weeks"
+      },
+      "x": 500,
+      "y": 100
+    }
+  ],
+  "flows": [
+    {
+      "id": "f1",
+      "from": "v1",
+      "to": "v2",
+      "label": "Analysis output",
+      "medium": "data",
+      "trigger": "automated",
+      "quality": "good",
+      "qualityDetail": {
+        "timeliness": "Real-time",
+        "completeness": "All key metrics included",
+        "structure": "Structured JSON",
+        "traceability": "Full audit trail"
+      }
+    },
+    {
+      "id": "f2",
+      "from": "e1",
+      "to": "v1",
+      "label": "Permissions",
+      "medium": "signal",
+      "quality": "good"
+    }
+  ],
+  "forces": [
+    {
+      "id": "ft1",
+      "actingOn": "v1",
+      "category": "org",
+      "polarity": "enabling",
+      "intensity": 2,
+      "description": "Clear KPI alignment from leadership"
+    },
+    {
+      "id": "ft2",
+      "actingOn": "v1",
+      "category": "system",
+      "polarity": "constraining",
+      "intensity": 1,
+      "description": "Occasional API timeouts during peak hours",
+      "evidence": "2-3 incidents per month"
+    },
+    {
+      "id": "ft3",
+      "actingOn": "w1",
+      "category": "process",
+      "polarity": "constraining",
+      "intensity": 3,
+      "description": "No standardized data validation rules"
+    }
+  ],
+  "frictionPoints": [
+    {
+      "id": "fr1",
+      "title": "Delayed CSR delivery due to manual review",
+      "severity": "high",
+      "primaryNode": "v2",
+      "convergence": "Multiple force constraints + waste accumulation",
+      "valueNaturesBlocked": ["knowledge_generation", "artifact_production"],
+      "leveragePoint": "Implement automated quality checks on draft CSR",
+      "leverageType": "automation",
+      "prerequisites": ["Data quality improvements", "Template standardization"],
+      "estimatedCost": "1 week dev + 0.5 week testing"
+    }
+  ],
+  "feedbackLoops": [
+    {
+      "id": "loop1",
+      "label": "CSR quality spiral",
+      "fromNode": "v2",
+      "toNode": "v1",
+      "polarity": "reinforcing",
+      "description": "Better analysis → better CSRs → higher customer satisfaction → more resources for analysis team",
+      "amplification": "Virtuous cycle with ~15% annual improvement potential",
+      "breakPoint": "When customer acquisition plateaus"
+    }
+  ]
+}

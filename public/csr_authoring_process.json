@@ -1,0 +1,2611 @@
+{
+  "schema": "vfd-v5.2",
+  "definition": {
+    "processName": "Clinical Study Report (CSR) Authoring & Distribution",
+    "version": "3.0",
+    "output": "Approved, Published CSR and eCTD submission package",
+    "customer": "Health Authorities (HA), Ethics Committees (EC), Investigators, Patients",
+    "valueAtom": "Verified clinical trial evidence translated into a regulatory claim",
+    "valueConfiguration": "chain",
+    "configurationNotes": "Sequential, highly-gated waterfall process heavily dependent on upstream data locks, parallel drafting streams (Body, Appendices, Narratives), and cross-functional consensus. Highly fragmented across external vendors.",
+    "trigger": "Planned Study DB lock date available / Decision for need of CSR",
+    "endpoint": "CSR distributed, archived in TMF, and Study Disclosure performed",
+    "dimensions": [
+      "Cycle Time",
+      "Traceability",
+      "Compliance",
+      "Manual Effort",
+      "Rework Loops",
+      "Vendor Integration"
+    ],
+    "leadTime": {
+      "value": 130,
+      "unit": "days"
+    },
+    "processTime": {
+      "value": 55,
+      "unit": "days"
+    },
+    "flowEfficiency": 0.42
+  },
+  "nodes": [
+    {
+      "id": "vn1",
+      "label": "DB Lock & Data Cleaning",
+      "sublabel": "Clean and lock clinical trial data",
+      "category": "value",
+      "state": "stress",
+      "stateRationale": "Highly compressed timeline (30 days) to clean up to 1000+ subjects. Intense pushing of site staff; complex external vendor data reconciliation.",
+      "performer": {
+        "role": "Clinical Data Manager (CDM)",
+        "team": "Data Management",
+        "orgRelation": "embedded"
+      },
+      "valueNatures": [
+        {
+          "nature": "risk_reduction",
+          "isPrimary": true,
+          "description": "Ensures 100% data quality before analysis begins"
+        }
+      ],
+      "transformCharacter": "evaluative",
+      "metrics": {
+        "cycleTime": {
+          "value": 30,
+          "unit": "days",
+          "confidence": "measured"
+        }
+      },
+      "valueSpec": {
+        "inputSummary": "Raw EDC data, external lab/vendor data",
+        "outputSummary": "Locked Clinical Database",
+        "valueAdded": "Transforms raw, unverified data into a locked, trustworthy foundation for analysis."
+      },
+      "x": 1302,
+      "y": 547
+    },
+    {
+      "id": "vn2",
+      "label": "SAP / IAP Generation",
+      "sublabel": "Develop Statistical Analysis Plan",
+      "category": "value",
+      "state": "stress",
+      "stateRationale": "90% of the analysis plan for standard studies is exactly the same, creating redundant inefficiencies and wasting 2-4 weeks.",
+      "performer": {
+        "role": "Biostatistician",
+        "team": "Biostatistics",
+        "orgRelation": "matrixed"
+      },
+      "valueNatures": [
+        {
+          "nature": "knowledge_generation",
+          "isPrimary": true,
+          "description": "Defines how the data will be analyzed and reported"
+        }
+      ],
+      "transformCharacter": "analytical",
+      "metrics": {
+        "cycleTime": {
+          "value": 14,
+          "unit": "days",
+          "confidence": "estimated"
+        }
+      },
+      "valueSpec": {
+        "inputSummary": "Study Protocol",
+        "outputSummary": "Integrated Analysis Plan (IAP)",
+        "valueAdded": "Sets the statistical methodology framework."
+      },
+      "x": 1715,
+      "y": 684
+    },
+    {
+      "id": "vn3",
+      "label": "Generate TLFs",
+      "sublabel": "Produce Tables, Listings, and Figures",
+      "category": "value",
+      "state": "fragmentation",
+      "stateRationale": "External PK data arrives late; fragmented data sources from 11-12 different vendors. Produces 150-200 outputs.",
+      "performer": {
+        "role": "Statistical Programmer",
+        "team": "Clinical Measurement Sciences",
+        "orgRelation": "matrixed"
+      },
+      "valueNatures": [
+        {
+          "nature": "knowledge_generation",
+          "isPrimary": true,
+          "description": "Converts CDISC/ADaM data into human-readable evidence"
+        }
+      ],
+      "transformCharacter": "analytical",
+      "metrics": {
+        "cycleTime": {
+          "value": 30,
+          "unit": "days",
+          "confidence": "measured"
+        }
+      },
+      "valueSpec": {
+        "inputSummary": "ADaM datasets, SAP",
+        "outputSummary": "Final TLFs (PDF/RTF)",
+        "valueAdded": "Applies statistical methods to derive efficacy and safety results."
+      },
+      "x": 1698,
+      "y": 551
+    },
+    {
+      "id": "vn4",
+      "label": "Define Report Type",
+      "sublabel": "Decide CSR type and regulatory intent",
+      "category": "value",
+      "state": "homeostasis",
+      "stateRationale": "Clear criteria based on protocol and regulatory strategy. Decisions are made quickly.",
+      "performer": {
+        "role": "Global Regulatory Lead (GRL)",
+        "team": "Global Regulatory Affairs",
+        "orgRelation": "aligned"
+      },
+      "valueNatures": [
+        {
+          "nature": "alignment",
+          "isPrimary": true,
+          "description": "Aligns cross-functional strategy on CSR submission"
+        }
+      ],
+      "transformCharacter": "evaluative",
+      "valueSpec": {
+        "inputSummary": "Study Protocol, Trial Data Status",
+        "outputSummary": "Report Type Definition (Full, Abbreviated, Synoptic)",
+        "valueAdded": "Sets the scope and template framework for the entire CSR."
+      },
+      "x": 354,
+      "y": 320,
+      "metrics": {}
+    },
+    {
+      "id": "en1",
+      "label": "Build Route Map",
+      "sublabel": "Plan timelines and responsibilities",
+      "category": "enabling",
+      "state": "fragmentation",
+      "stateRationale": "Route Map disconnects from Veeva workflows, causing system audit gaps and out-of-sync tracking.",
+      "performer": {
+        "role": "Medical Writer",
+        "team": "Medical Writing",
+        "orgRelation": "embedded"
+      },
+      "valueNatures": [
+        {
+          "nature": "coordination",
+          "isPrimary": true,
+          "description": "Establishes project schedule"
+        }
+      ],
+      "transformCharacter": "procedural",
+      "enablingSpec": {
+        "enablingType": "coordination",
+        "requiredBy": "SOP",
+        "eliminable": false
+      },
+      "x": 643,
+      "y": 320,
+      "metrics": {}
+    },
+    {
+      "id": "en2",
+      "label": "Kick-off Meeting",
+      "sublabel": "Align team on roles and timelines",
+      "category": "enabling",
+      "state": "homeostasis",
+      "stateRationale": "Standard meeting to secure buy-in from all stakeholders.",
+      "performer": {
+        "role": "Medical Writer",
+        "team": "Medical Writing",
+        "orgRelation": "embedded"
+      },
+      "valueNatures": [
+        {
+          "nature": "alignment",
+          "isPrimary": true,
+          "description": "Secures commitment to the Route Map"
+        }
+      ],
+      "transformCharacter": "procedural",
+      "enablingSpec": {
+        "enablingType": "coordination",
+        "requiredBy": "SOP",
+        "eliminable": false
+      },
+      "x": 926,
+      "y": 320,
+      "metrics": {}
+    },
+    {
+      "id": "vn5",
+      "label": "Setup RLCP",
+      "sublabel": "Create Report Level Content Plan",
+      "category": "value",
+      "state": "stress",
+      "stateRationale": "Intense manual effort to create placeholders and map 140+ documents. Template mismatch between internal structure and ICH E3.",
+      "performer": {
+        "role": "Document Support Team",
+        "team": "DST",
+        "orgRelation": "service"
+      },
+      "valueNatures": [
+        {
+          "nature": "infrastructure",
+          "isPrimary": true,
+          "description": "Creates the document hierarchy in Veeva"
+        }
+      ],
+      "transformCharacter": "procedural",
+      "valueSpec": {
+        "inputSummary": "Report Type, Standard RLCP Template",
+        "outputSummary": "Empty RLCP Structure",
+        "valueAdded": "Prepares Veeva for document ingesting and eCTD tracking."
+      },
+      "x": 928,
+      "y": 437,
+      "metrics": {}
+    },
+    {
+      "id": "vn6",
+      "label": "Body Shell",
+      "sublabel": "Create complete body shell with fixed text",
+      "category": "value",
+      "state": "homeostasis",
+      "stateRationale": "Relatively straightforward adaptation of templates.",
+      "performer": {
+        "role": "Medical Writer",
+        "team": "Medical Writing",
+        "orgRelation": "embedded"
+      },
+      "valueNatures": [
+        {
+          "nature": "artifact_production",
+          "isPrimary": true,
+          "description": "Sets structural outline of data-dependent sections"
+        }
+      ],
+      "transformCharacter": "generative",
+      "valueSpec": {
+        "inputSummary": "Approved Protocol, IAP",
+        "outputSummary": "CSR Shell Document",
+        "valueAdded": "Frontloads methodological parts of the report before data arrives."
+      },
+      "x": 1189,
+      "y": 322,
+      "metrics": {}
+    },
+    {
+      "id": "en3",
+      "label": "Review CSR Shell",
+      "sublabel": "Core team reviews shell structure",
+      "category": "enabling",
+      "state": "homeostasis",
+      "stateRationale": "Usually runs smoothly, establishing agreement on presentation.",
+      "performer": {
+        "role": "CSR Core Team",
+        "team": "Cross-functional",
+        "orgRelation": "matrixed"
+      },
+      "valueNatures": [
+        {
+          "nature": "alignment",
+          "isPrimary": true,
+          "description": "Agrees on key data presentation and messaging"
+        }
+      ],
+      "transformCharacter": "evaluative",
+      "enablingSpec": {
+        "enablingType": "governance",
+        "requiredBy": "SOP",
+        "eliminable": false
+      },
+      "x": 1436,
+      "y": 324,
+      "metrics": {}
+    },
+    {
+      "id": "en4",
+      "label": "Results Review Meeting",
+      "sublabel": "Agree on interpretation of TLFs",
+      "category": "enabling",
+      "state": "stress",
+      "stateRationale": "Requires coordination of multiple fragmented data systems; late ad-hoc queries requested here severely pressure the timeline.",
+      "performer": {
+        "role": "Medical Writer",
+        "team": "Medical Writing",
+        "orgRelation": "embedded"
+      },
+      "valueNatures": [
+        {
+          "nature": "alignment",
+          "isPrimary": true,
+          "description": "Solidifies the scientific narrative based on locked data"
+        }
+      ],
+      "transformCharacter": "interpretive",
+      "enablingSpec": {
+        "enablingType": "coordination",
+        "requiredBy": "SOP",
+        "eliminable": false
+      },
+      "x": 1716,
+      "y": 323,
+      "metrics": {}
+    },
+    {
+      "id": "vn7",
+      "label": "Body Draft 1",
+      "sublabel": "Write CSR body and integrate TLF data",
+      "category": "value",
+      "state": "implosion",
+      "stateRationale": "Highly error-prone manual copy-pasting of thousands of pages of data from RTFs/PDFs into Word. Style inconsistencies across multiple authors.",
+      "performer": {
+        "role": "Medical Writer",
+        "team": "Medical Writing",
+        "orgRelation": "embedded"
+      },
+      "valueNatures": [
+        {
+          "nature": "artifact_production",
+          "isPrimary": true,
+          "description": "Translates TLF data into scientific narratives and claims"
+        }
+      ],
+      "transformCharacter": "integrative",
+      "metrics": {
+        "cycleTime": {
+          "value": 20,
+          "unit": "days",
+          "confidence": "measured"
+        }
+      },
+      "valueSpec": {
+        "inputSummary": "Final TLFs, CSR Shell",
+        "outputSummary": "CSR Draft 1",
+        "valueAdded": "Synthesizes raw statistical output into regulatory-compliant scientific text."
+      },
+      "x": 2001,
+      "y": 318
+    },
+    {
+      "id": "vn8",
+      "label": "Narratives Draft 1",
+      "sublabel": "Write patient safety narratives",
+      "category": "value",
+      "state": "stress",
+      "stateRationale": "Massive manual effort (100-300+ narratives per study) combining CIOMS forms and safety databases. Vendor outputs often lack consistency.",
+      "performer": {
+        "role": "Vendor Writer",
+        "team": "CRO",
+        "orgRelation": "contracted"
+      },
+      "valueNatures": [
+        {
+          "nature": "artifact_production",
+          "isPrimary": true,
+          "description": "Creates patient-specific safety profiles"
+        }
+      ],
+      "transformCharacter": "generative",
+      "metrics": {
+        "effort": {
+          "value": 60,
+          "unit": "person-days",
+          "confidence": "estimated"
+        }
+      },
+      "valueSpec": {
+        "inputSummary": "CIOMS forms, Safety TLFs",
+        "outputSummary": "Narrative Draft 1",
+        "valueAdded": "Extracts critical safety events into readable patient profiles."
+      },
+      "x": 2024,
+      "y": 768
+    },
+    {
+      "id": "vn9",
+      "label": "Appendices Draft 1",
+      "sublabel": "Assemble all CSR appendices",
+      "category": "value",
+      "state": "fragmentation",
+      "stateRationale": "Heavy dependency on external vendors (e.g., bioanalytical reports, subject PDFs) causing delays from weeks up to half a year.",
+      "performer": {
+        "role": "Medical Writer",
+        "team": "Medical Writing",
+        "orgRelation": "embedded"
+      },
+      "valueNatures": [
+        {
+          "nature": "artifact_production",
+          "isPrimary": true,
+          "description": "Compiles supporting documentation"
+        }
+      ],
+      "transformCharacter": "integrative",
+      "valueSpec": {
+        "inputSummary": "Protocols, IAP, TLFs, Subject PDFs",
+        "outputSummary": "Appendices Draft 1",
+        "valueAdded": "Ensures all regulatory required backups are attached."
+      },
+      "x": 2016,
+      "y": 532,
+      "metrics": {}
+    },
+    {
+      "id": "en5",
+      "label": "Review CSR Draft 1",
+      "sublabel": "Core team reviews Draft 1",
+      "category": "enabling",
+      "state": "fragmentation",
+      "stateRationale": "24-30 reviewers. Reviewers fail to click 'complete' in Veeva, causing massive administrative drag.",
+      "performer": {
+        "role": "CSR Core Team",
+        "team": "Cross-functional",
+        "orgRelation": "matrixed"
+      },
+      "valueNatures": [
+        {
+          "nature": "alignment",
+          "isPrimary": true,
+          "description": "Validates accuracy, completeness, and strategy fit"
+        }
+      ],
+      "transformCharacter": "evaluative",
+      "metrics": {
+        "cycleTime": {
+          "value": 5,
+          "unit": "days",
+          "confidence": "measured"
+        }
+      },
+      "enablingSpec": {
+        "enablingType": "governance",
+        "requiredBy": "SOP",
+        "eliminable": false
+      },
+      "x": 2292,
+      "y": 313
+    },
+    {
+      "id": "en6",
+      "label": "Comment Resolution 1",
+      "sublabel": "Resolve major/critical comments",
+      "category": "enabling",
+      "state": "homeostasis",
+      "stateRationale": "Structured meeting to handle conflicting feedback and coordinate revisions.",
+      "performer": {
+        "role": "Medical Writer",
+        "team": "Medical Writing",
+        "orgRelation": "embedded"
+      },
+      "valueNatures": [
+        {
+          "nature": "alignment",
+          "isPrimary": true,
+          "description": "Harmonizes cross-functional discrepancies"
+        }
+      ],
+      "transformCharacter": "interpretive",
+      "enablingSpec": {
+        "enablingType": "coordination",
+        "requiredBy": "SOP",
+        "eliminable": false
+      },
+      "x": 2575,
+      "y": 311,
+      "metrics": {}
+    },
+    {
+      "id": "vn10",
+      "label": "Body Draft 2",
+      "sublabel": "Incorporate feedback and finalize content",
+      "category": "value",
+      "state": "stress",
+      "stateRationale": "Zombie references carried over from old templates; manual formatting consistency required.",
+      "performer": {
+        "role": "Medical Writer",
+        "team": "Medical Writing",
+        "orgRelation": "embedded"
+      },
+      "valueNatures": [
+        {
+          "nature": "artifact_production",
+          "isPrimary": true,
+          "description": "Produces near-final CSR body"
+        }
+      ],
+      "transformCharacter": "generative",
+      "metrics": {
+        "cycleTime": {
+          "value": 10,
+          "unit": "days",
+          "confidence": "measured"
+        }
+      },
+      "valueSpec": {
+        "inputSummary": "Draft 1, Review Comments",
+        "outputSummary": "CSR Draft 2",
+        "valueAdded": "Applies scientific and strategic polish to the report."
+      },
+      "x": 2845,
+      "y": 310
+    },
+    {
+      "id": "vn11",
+      "label": "Narratives Draft 2",
+      "sublabel": "Finalize Narratives Document",
+      "category": "value",
+      "state": "homeostasis",
+      "stateRationale": "Merging individual files or batches into a single MS Word document with hyperlinked ToC.",
+      "performer": {
+        "role": "Medical Writer",
+        "team": "Medical Writing",
+        "orgRelation": "embedded"
+      },
+      "valueNatures": [
+        {
+          "nature": "artifact_production",
+          "isPrimary": true,
+          "description": "Consolidates narrative deliverables"
+        }
+      ],
+      "transformCharacter": "integrative",
+      "valueSpec": {
+        "inputSummary": "Narrative Draft 1, PS Comments",
+        "outputSummary": "Single submission-ready MS Word document",
+        "valueAdded": "Readies narratives for final QC."
+      },
+      "x": 2842,
+      "y": 572,
+      "metrics": {}
+    },
+    {
+      "id": "vn12",
+      "label": "Appendices Draft 2",
+      "sublabel": "Complete all appendices",
+      "category": "value",
+      "state": "fragmentation",
+      "stateRationale": "Still waiting on late external data elements (e.g. PK, Bioanalytical) delaying the entire package.",
+      "performer": {
+        "role": "Medical Writer",
+        "team": "Medical Writing",
+        "orgRelation": "embedded"
+      },
+      "valueNatures": [
+        {
+          "nature": "artifact_production",
+          "isPrimary": true,
+          "description": "Finalizes supporting appendix framework"
+        }
+      ],
+      "transformCharacter": "integrative",
+      "valueSpec": {
+        "inputSummary": "Draft 1 Appendices",
+        "outputSummary": "Draft 2 Appendices",
+        "valueAdded": "Ensures all sections exist prior to QC."
+      },
+      "x": 2843,
+      "y": 475,
+      "metrics": {}
+    },
+    {
+      "id": "en7",
+      "label": "Review CSR Draft 2",
+      "sublabel": "Extended team review",
+      "category": "enabling",
+      "state": "homeostasis",
+      "stateRationale": "Final large-scale internal review before QC.",
+      "performer": {
+        "role": "Extended CSR Team",
+        "team": "Cross-functional",
+        "orgRelation": "matrixed"
+      },
+      "valueNatures": [
+        {
+          "nature": "alignment",
+          "isPrimary": true,
+          "description": "Secures broader organizational buy-in"
+        }
+      ],
+      "transformCharacter": "evaluative",
+      "metrics": {
+        "cycleTime": {
+          "value": 5,
+          "unit": "days",
+          "confidence": "measured"
+        }
+      },
+      "enablingSpec": {
+        "enablingType": "governance",
+        "requiredBy": "SOP",
+        "eliminable": false
+      },
+      "x": 3140,
+      "y": 310
+    },
+    {
+      "id": "en8",
+      "label": "Investigator Review",
+      "sublabel": "PI/Coordinating Investigator Review",
+      "category": "enabling",
+      "state": "homeostasis",
+      "stateRationale": "Required external clinical sign-off, unless blinded.",
+      "performer": {
+        "role": "Investigator",
+        "team": "External Site",
+        "orgRelation": "contracted"
+      },
+      "valueNatures": [
+        {
+          "nature": "alignment",
+          "isPrimary": true,
+          "description": "Validates clinical interpretation externally"
+        }
+      ],
+      "transformCharacter": "evaluative",
+      "enablingSpec": {
+        "enablingType": "governance",
+        "requiredBy": "GCP",
+        "eliminable": false
+      },
+      "x": 3428,
+      "y": 307,
+      "metrics": {}
+    },
+    {
+      "id": "en9",
+      "label": "QC - Body",
+      "sublabel": "100% check of data points against source",
+      "category": "enabling",
+      "state": "stress",
+      "stateRationale": "Due to manual transcription, every single number and claim must be manually checked against PDFs/RTFs.",
+      "performer": {
+        "role": "QC Specialist",
+        "team": "Quality Control",
+        "orgRelation": "service"
+      },
+      "valueNatures": [
+        {
+          "nature": "risk_reduction",
+          "isPrimary": true,
+          "description": "Ensures absolute data integrity for Health Authorities"
+        }
+      ],
+      "transformCharacter": "evaluative",
+      "metrics": {
+        "cycleTime": {
+          "value": 10,
+          "unit": "days",
+          "confidence": "measured"
+        }
+      },
+      "enablingSpec": {
+        "enablingType": "governance",
+        "requiredBy": "GCP/QA Standards",
+        "eliminable": false
+      },
+      "x": 3683,
+      "y": 304
+    },
+    {
+      "id": "en10",
+      "label": "QC - Narratives & Appendices",
+      "sublabel": "Format and consistency check on attachments",
+      "category": "enabling",
+      "state": "homeostasis",
+      "stateRationale": "Standard procedural check.",
+      "performer": {
+        "role": "QC Specialist",
+        "team": "Quality Control",
+        "orgRelation": "service"
+      },
+      "valueNatures": [
+        {
+          "nature": "risk_reduction",
+          "isPrimary": true,
+          "description": "Validates formatting and source matching"
+        }
+      ],
+      "transformCharacter": "evaluative",
+      "enablingSpec": {
+        "enablingType": "governance",
+        "requiredBy": "SOP",
+        "eliminable": false
+      },
+      "x": 3676,
+      "y": 476,
+      "metrics": {}
+    },
+    {
+      "id": "en11",
+      "label": "Approval & Signatures",
+      "sublabel": "Wet ink or eSignature collection",
+      "category": "enabling",
+      "state": "stress",
+      "stateRationale": "Securing final signatures from CSR Approver, Signatory, and Investigator can cause delays due to system/access issues.",
+      "performer": {
+        "role": "CSR Approver / Signatory",
+        "team": "Management / Medical",
+        "orgRelation": "aligned"
+      },
+      "valueNatures": [
+        {
+          "nature": "commitment",
+          "isPrimary": true,
+          "description": "Formal organizational and clinical sign-off"
+        }
+      ],
+      "transformCharacter": "evaluative",
+      "enablingSpec": {
+        "enablingType": "governance",
+        "requiredBy": "Regulatory Authorities",
+        "eliminable": false
+      },
+      "x": 3906,
+      "y": 383,
+      "metrics": {}
+    },
+    {
+      "id": "en12",
+      "label": "RLCP Baselining",
+      "sublabel": "Lock content plan for publishing",
+      "category": "enabling",
+      "state": "explosion",
+      "stateRationale": "Veeva auto-matching logic floods the RLCP with up to 300 irrelevant documents when state changes to Baseline.",
+      "performer": {
+        "role": "DST Publisher",
+        "team": "DST",
+        "orgRelation": "service"
+      },
+      "valueNatures": [
+        {
+          "nature": "infrastructure",
+          "isPrimary": true,
+          "description": "Locks the technical structure for eCTD publishing"
+        }
+      ],
+      "transformCharacter": "procedural",
+      "enablingSpec": {
+        "enablingType": "infrastructure",
+        "requiredBy": "Veeva RIM System",
+        "eliminable": false
+      },
+      "x": 4156,
+      "y": 384,
+      "metrics": {}
+    },
+    {
+      "id": "vn13",
+      "label": "Publish & Hyperlink",
+      "sublabel": "Create hyperlinked submission package",
+      "category": "value",
+      "state": "fragmentation",
+      "stateRationale": "Any late changes force the document back to draft, breaking all manual hyperlinks which must be completely redone for 140+ docs.",
+      "performer": {
+        "role": "DST Publisher",
+        "team": "DST",
+        "orgRelation": "service"
+      },
+      "valueNatures": [
+        {
+          "nature": "artifact_production",
+          "isPrimary": true,
+          "description": "Finalizes the eCTD-ready CSR package"
+        }
+      ],
+      "transformCharacter": "procedural",
+      "metrics": {
+        "cycleTime": {
+          "value": 15,
+          "unit": "days",
+          "confidence": "measured"
+        }
+      },
+      "valueSpec": {
+        "inputSummary": "Approved CSR Docs",
+        "outputSummary": "Published CSR Binder",
+        "valueAdded": "Creates navigable, regulatory-compliant submission package."
+      },
+      "x": 4413,
+      "y": 382
+    },
+    {
+      "id": "vn14",
+      "label": "Distribute CSR",
+      "sublabel": "Send to Health Authorities & Investigators",
+      "category": "value",
+      "state": "homeostasis",
+      "stateRationale": "Straightforward distribution via standard channels once package is complete.",
+      "performer": {
+        "role": "GRL / CTL",
+        "team": "Regulatory / Clinical Ops",
+        "orgRelation": "aligned"
+      },
+      "valueNatures": [
+        {
+          "nature": "compliance",
+          "isPrimary": true,
+          "description": "Fulfills regulatory submission requirements"
+        }
+      ],
+      "transformCharacter": "procedural",
+      "valueSpec": {
+        "inputSummary": "Published CSR",
+        "outputSummary": "Submission Receipt",
+        "valueAdded": "Moves the document from internal approval to regulatory assessment."
+      },
+      "x": 4656,
+      "y": 386,
+      "metrics": {}
+    },
+    {
+      "id": "vn15",
+      "label": "Archive in TMF",
+      "sublabel": "File final package to Trial Master File",
+      "category": "value",
+      "state": "homeostasis",
+      "stateRationale": "Standard operational wrap-up.",
+      "performer": {
+        "role": "CTL / CRM",
+        "team": "Clinical Ops",
+        "orgRelation": "aligned"
+      },
+      "valueNatures": [
+        {
+          "nature": "infrastructure",
+          "isPrimary": true,
+          "description": "Secures the document of record"
+        }
+      ],
+      "transformCharacter": "procedural",
+      "valueSpec": {
+        "inputSummary": "Published CSR",
+        "outputSummary": "TMF Record",
+        "valueAdded": "Ensures long-term audit readiness."
+      },
+      "x": 4890,
+      "y": 386,
+      "metrics": {}
+    },
+    {
+      "id": "vn16",
+      "label": "Layman Summary & Disclosure",
+      "sublabel": "Create patient-facing transparency document",
+      "category": "value",
+      "state": "stress",
+      "stateRationale": "Requires 10-12 hours of manual summarization of complex 400-page CSRs into 2-page layman documents.",
+      "performer": {
+        "role": "Clinical Trial Transparency",
+        "team": "CTTR / GPS",
+        "orgRelation": "aligned"
+      },
+      "valueNatures": [
+        {
+          "nature": "compliance",
+          "isPrimary": true,
+          "description": "Meets EU regulatory requirements for patient disclosure"
+        }
+      ],
+      "transformCharacter": "generative",
+      "valueSpec": {
+        "inputSummary": "Published CSR",
+        "outputSummary": "Layman Summary Document",
+        "valueAdded": "Translates dense scientific data into accessible information for trial participants."
+      },
+      "x": 4414,
+      "y": 531,
+      "metrics": {}
+    },
+    {
+      "id": "wn1",
+      "label": "Manual POL Entry",
+      "sublabel": "Entering 140+ document paths manually",
+      "category": "waste",
+      "state": null,
+      "performer": {
+        "role": "Document Support Team",
+        "team": "DST",
+        "orgRelation": "service"
+      },
+      "valueNatures": [],
+      "transformCharacter": null,
+      "wasteSpec": {
+        "wasteType": "overprocessing",
+        "driver": "Strict 58-character limit and lack of auto-population in Veeva",
+        "parasitises": "vn5",
+        "eliminationCondition": "Automate POL generation based on study metadata"
+      },
+      "x": 804,
+      "y": 547,
+      "metrics": {}
+    },
+    {
+      "id": "wn2",
+      "label": "Manual Source Doc Uploads",
+      "sublabel": "Drag-and-drop of 140+ source docs",
+      "category": "waste",
+      "state": null,
+      "performer": {
+        "role": "Document Support Team",
+        "team": "DST",
+        "orgRelation": "service"
+      },
+      "valueNatures": [],
+      "transformCharacter": null,
+      "wasteSpec": {
+        "wasteType": "translation",
+        "driver": "Lack of direct system integration, relying on Excel sheets and manual uploads",
+        "parasitises": "vn5",
+        "eliminationCondition": "Direct ingestion from binder ID or API"
+      },
+      "x": 919,
+      "y": 688,
+      "metrics": {}
+    },
+    {
+      "id": "wn3",
+      "label": "Non-Standard Template Mapping",
+      "sublabel": "Translating to/from ICH E3 format",
+      "category": "waste",
+      "state": null,
+      "performer": {
+        "role": "Document Support Team",
+        "team": "DST",
+        "orgRelation": "service"
+      },
+      "valueNatures": [],
+      "transformCharacter": null,
+      "wasteSpec": {
+        "wasteType": "translation",
+        "driver": "Merck uses an internal structure that differs from the standard ICH E3 used by external partners",
+        "parasitises": "vn9",
+        "eliminationCondition": "Harmonize templates globally to ICH E3"
+      },
+      "x": 1042,
+      "y": 549,
+      "metrics": {}
+    },
+    {
+      "id": "wn4",
+      "label": "Redundant SAP Writing",
+      "sublabel": "Writing full plans for standard studies",
+      "category": "waste",
+      "state": null,
+      "performer": {
+        "role": "Biostatistician",
+        "team": "Biostatistics",
+        "orgRelation": "matrixed"
+      },
+      "valueNatures": [],
+      "transformCharacter": null,
+      "wasteSpec": {
+        "wasteType": "overprocessing",
+        "driver": "Governance processes require full documentation even for 'cookie-cutter' studies where 90% is identical",
+        "parasitises": "vn2",
+        "eliminationCondition": "Adopt modular or exempt SAP models for standard studies"
+      },
+      "x": 1474,
+      "y": 680,
+      "metrics": {}
+    },
+    {
+      "id": "wn5",
+      "label": "Ad-Hoc In-Text Table Requests",
+      "sublabel": "Late requests for custom tables",
+      "category": "waste",
+      "state": null,
+      "performer": {
+        "role": "Statistical Programmer",
+        "team": "Clinical Measurement Sciences",
+        "orgRelation": "matrixed"
+      },
+      "valueNatures": [],
+      "transformCharacter": null,
+      "wasteSpec": {
+        "wasteType": "rework",
+        "driver": "Team identifies new data presentation needs during Results Review",
+        "parasitises": "en4",
+        "eliminationCondition": "Self-serve table generator for MWs/Statisticians"
+      },
+      "x": 1792,
+      "y": 199,
+      "metrics": {}
+    },
+    {
+      "id": "wn6",
+      "label": "Manual Copy-Paste Transcription",
+      "sublabel": "Typing/copying data from PDFs/RTFs to Word",
+      "category": "waste",
+      "state": null,
+      "performer": {
+        "role": "Medical Writer",
+        "team": "Medical Writing",
+        "orgRelation": "embedded"
+      },
+      "valueNatures": [],
+      "transformCharacter": null,
+      "wasteSpec": {
+        "wasteType": "translation",
+        "driver": "Lack of system integration between Analysis (Nexus) and Authoring (Word/Veeva)",
+        "parasitises": "vn7",
+        "eliminationCondition": "Live evidence linking / automated data-to-text generation"
+      },
+      "x": 2011,
+      "y": 196,
+      "metrics": {}
+    },
+    {
+      "id": "wn7",
+      "label": "Vendor-to-Sponsor TLF Loops",
+      "sublabel": "Reworking analysis files from external vendors",
+      "category": "waste",
+      "state": null,
+      "performer": {
+        "role": "Statistical Programmer",
+        "team": "Clinical Measurement Sciences",
+        "orgRelation": "matrixed"
+      },
+      "valueNatures": [],
+      "transformCharacter": null,
+      "wasteSpec": {
+        "wasteType": "rework",
+        "driver": "Outsourced data packages require internal mapping and quality checks",
+        "parasitises": "vn3",
+        "eliminationCondition": "Direct system integration with key vendor partners"
+      },
+      "x": 1588,
+      "y": 436,
+      "metrics": {}
+    },
+    {
+      "id": "wn8",
+      "label": "Chasing Reviewers",
+      "sublabel": "Manual email/Teams reminders",
+      "category": "waste",
+      "state": null,
+      "performer": {
+        "role": "Medical Writer",
+        "team": "Medical Writing",
+        "orgRelation": "embedded"
+      },
+      "valueNatures": [],
+      "transformCharacter": null,
+      "wasteSpec": {
+        "wasteType": "queue",
+        "driver": "Reviewer 'click-fatigue' and poor system adherence",
+        "parasitises": "en5",
+        "eliminationCondition": "Automated orchestrator linked to Route Map"
+      },
+      "x": 2300,
+      "y": 196,
+      "metrics": {}
+    },
+    {
+      "id": "wn9",
+      "label": "Zombie Reference Carryover",
+      "sublabel": "Pasting outdated/incorrect references",
+      "category": "waste",
+      "state": null,
+      "performer": {
+        "role": "Medical Writer",
+        "team": "Medical Writing",
+        "orgRelation": "embedded"
+      },
+      "valueNatures": [],
+      "transformCharacter": null,
+      "wasteSpec": {
+        "wasteType": "rework",
+        "driver": "Human error when using boilerplate templates across different studies",
+        "parasitises": "vn10",
+        "eliminationCondition": "AI agent verifying reference relevance"
+      },
+      "x": 2851,
+      "y": 197,
+      "metrics": {}
+    },
+    {
+      "id": "wn10",
+      "label": "Unreliable Vendor Subject PDFs",
+      "sublabel": "Delays receiving clean subject data",
+      "category": "waste",
+      "state": null,
+      "performer": {
+        "role": "Clinical Data Manager",
+        "team": "Data Management",
+        "orgRelation": "embedded"
+      },
+      "valueNatures": [],
+      "transformCharacter": null,
+      "wasteSpec": {
+        "wasteType": "queue",
+        "driver": "CRO EDC systems generating poor quality PDFs, blocking the CSR appendix completion",
+        "parasitises": "vn9",
+        "eliminationCondition": "In-house generation capabilities or strict automated vendor QA"
+      },
+      "x": 2025,
+      "y": 640,
+      "metrics": {}
+    },
+    {
+      "id": "wn11",
+      "label": "Late Data Re-QC Loop",
+      "sublabel": "Re-checking after late statistical changes",
+      "category": "waste",
+      "state": null,
+      "performer": {
+        "role": "QC Specialist",
+        "team": "Quality Control",
+        "orgRelation": "service"
+      },
+      "valueNatures": [],
+      "transformCharacter": null,
+      "wasteSpec": {
+        "wasteType": "rework",
+        "driver": "Late TLF changes invalidate previous manual copy-paste work",
+        "parasitises": "en9",
+        "eliminationCondition": "Dynamic data-linking triggering targeted component re-QC"
+      },
+      "x": 3689,
+      "y": 198,
+      "metrics": {}
+    },
+    {
+      "id": "wn12",
+      "label": "Irrelevant Doc Flood Cleanup",
+      "sublabel": "Manually deleting 200+ auto-matched docs",
+      "category": "waste",
+      "state": null,
+      "performer": {
+        "role": "DST Publisher",
+        "team": "DST",
+        "orgRelation": "service"
+      },
+      "valueNatures": [],
+      "transformCharacter": null,
+      "wasteSpec": {
+        "wasteType": "overprocessing",
+        "driver": "Veeva auto-matching logic based on broad study metadata",
+        "parasitises": "en12",
+        "eliminationCondition": "Refine metadata tagging or automate removal of unlocked documents"
+      },
+      "x": 4162,
+      "y": 260,
+      "metrics": {}
+    },
+    {
+      "id": "wn13",
+      "label": "Hyperlink Re-creation",
+      "sublabel": "Redoing links after minor late changes",
+      "category": "waste",
+      "state": null,
+      "performer": {
+        "role": "DST Publisher",
+        "team": "DST",
+        "orgRelation": "service"
+      },
+      "valueNatures": [],
+      "transformCharacter": null,
+      "wasteSpec": {
+        "wasteType": "rework",
+        "driver": "Static PDF/Word linking breaks upon version changes (draft to baseline reversion)",
+        "parasitises": "vn13",
+        "eliminationCondition": "Dynamic hyperlinking tool or component-based gating"
+      },
+      "x": 4420,
+      "y": 267,
+      "metrics": {}
+    },
+    {
+      "id": "void1",
+      "label": "Live Evidence Linking",
+      "sublabel": "Dynamic data connection from Nexus to Word",
+      "category": "value",
+      "state": "void",
+      "stateRationale": "Currently missing; relies entirely on human translation of static PDFs/RTFs.",
+      "performer": {
+        "role": "System Integration Layer",
+        "team": "IT",
+        "orgRelation": "embedded"
+      },
+      "valueNatures": [
+        {
+          "nature": "capability_enablement",
+          "isPrimary": true,
+          "description": "Would automatically feed structured data into CSR templates"
+        }
+      ],
+      "transformCharacter": "integrative",
+      "valueSpec": {
+        "inputSummary": "ADaM/TLF JSON",
+        "outputSummary": "Auto-populated CSR tables/text",
+        "valueAdded": "Eliminates copy-paste, ensures 100% traceability, speeds up QC."
+      },
+      "x": 2030,
+      "y": 432,
+      "metrics": {},
+      "capabilitySpec": {
+        "kind": "automation",
+        "maturity": "conceptual",
+        "profileId": null
+      }
+    },
+    {
+      "id": "void2",
+      "label": "AI Narrative Generator",
+      "sublabel": "Automated generation of patient profiles",
+      "category": "value",
+      "state": "void",
+      "stateRationale": "Currently a massive 60-day manual effort by vendors; ripe for LLM automation.",
+      "performer": {
+        "role": "Agentic AI",
+        "team": "IT",
+        "orgRelation": "embedded"
+      },
+      "valueNatures": [
+        {
+          "nature": "capability_enablement",
+          "isPrimary": true,
+          "description": "Would generate standardized drafts from CIOMS/Safety data"
+        }
+      ],
+      "transformCharacter": "generative",
+      "valueSpec": {
+        "inputSummary": "CIOMS, Safety DB",
+        "outputSummary": "Draft Patient Narratives",
+        "valueAdded": "Reduces manual writing effort by 50-80%."
+      },
+      "x": 1396,
+      "y": 800,
+      "metrics": {},
+      "capabilitySpec": {
+        "kind": "automation",
+        "maturity": "conceptual",
+        "profileId": null
+      }
+    },
+    {
+      "id": "void3",
+      "label": "Route Map Auto-Orchestrator",
+      "sublabel": "Automated workflow management and reminders",
+      "category": "value",
+      "state": "void",
+      "stateRationale": "Currently MW acts as a secretary sending 24+ manual emails to chase reviewers.",
+      "performer": {
+        "role": "Agentic AI",
+        "team": "IT",
+        "orgRelation": "embedded"
+      },
+      "valueNatures": [
+        {
+          "nature": "capability_enablement",
+          "isPrimary": true,
+          "description": "Would sync Route Map with Veeva and auto-chase reviewers"
+        }
+      ],
+      "transformCharacter": "procedural",
+      "valueSpec": {
+        "inputSummary": "Route Map, Veeva Status",
+        "outputSummary": "Automated Nudges / Escalations",
+        "valueAdded": "Eliminates administrative drag on Medical Writers."
+      },
+      "x": 912,
+      "y": 185,
+      "metrics": {},
+      "capabilitySpec": {
+        "kind": "automation",
+        "maturity": "conceptual",
+        "profileId": null
+      }
+    },
+    {
+      "id": "void4",
+      "label": "Protocol-to-Visuals Agent",
+      "sublabel": "Generate visual study flowcharts from text",
+      "category": "value",
+      "state": "void",
+      "stateRationale": "Currently MWs manually interpret protocol text to draw scheduling diagrams.",
+      "performer": {
+        "role": "Agentic AI",
+        "team": "IT",
+        "orgRelation": "embedded"
+      },
+      "valueNatures": [
+        {
+          "nature": "capability_enablement",
+          "isPrimary": true,
+          "description": "Reads protocol Schedule of Assessments to auto-generate graphics"
+        }
+      ],
+      "transformCharacter": "generative",
+      "valueSpec": {
+        "inputSummary": "Study Protocol text",
+        "outputSummary": "Study Disposition / Schedule Diagram",
+        "valueAdded": "Provides immediate visual context for reports, saving manual drawing time."
+      },
+      "x": 1188,
+      "y": 167,
+      "metrics": {},
+      "capabilitySpec": {
+        "kind": "automation",
+        "maturity": "conceptual",
+        "profileId": null
+      }
+    },
+    {
+      "id": "void5",
+      "label": "Layman Summarization Agent",
+      "sublabel": "Draft disclosure documents automatically",
+      "category": "value",
+      "state": "void",
+      "stateRationale": "Currently CTTR team spends 10-12 hours manually condensing a 400+ page CSR into a 2-page document.",
+      "performer": {
+        "role": "Agentic AI",
+        "team": "IT",
+        "orgRelation": "embedded"
+      },
+      "valueNatures": [
+        {
+          "nature": "capability_enablement",
+          "isPrimary": true,
+          "description": "Condenses highly technical language to 8th-grade reading level"
+        }
+      ],
+      "transformCharacter": "generative",
+      "valueSpec": {
+        "inputSummary": "Published CSR",
+        "outputSummary": "Draft Layman Summary",
+        "valueAdded": "Accelerates compliance tasks by providing a high-quality initial draft."
+      },
+      "x": 4167,
+      "y": 531,
+      "metrics": {},
+      "capabilitySpec": {
+        "kind": "automation",
+        "maturity": "conceptual",
+        "profileId": null
+      }
+    },
+    {
+      "id": "void6",
+      "label": "Data Cleaning Agent",
+      "sublabel": "Automated clinical DB checks and querying",
+      "category": "value",
+      "state": "void",
+      "stateRationale": "CDM faces massive stress trying to review 1000s of patients in 30 days before lock.",
+      "performer": {
+        "role": "Agentic AI",
+        "team": "IT",
+        "orgRelation": "embedded"
+      },
+      "valueNatures": [
+        {
+          "nature": "capability_enablement",
+          "isPrimary": true,
+          "description": "Flags logical data inconsistencies and drafts site queries"
+        }
+      ],
+      "transformCharacter": "evaluative",
+      "valueSpec": {
+        "inputSummary": "EDC Raw Data",
+        "outputSummary": "Flagged anomalies and drafted queries",
+        "valueAdded": "Relieves the primary bottleneck gating the entire CSR process."
+      },
+      "x": 1154,
+      "y": 803,
+      "metrics": {},
+      "capabilitySpec": {
+        "kind": "automation",
+        "maturity": "conceptual",
+        "profileId": null
+      }
+    }
+  ],
+  "flows": [
+    {
+      "id": "f1",
+      "label": "Clean Data",
+      "from": "vn1",
+      "to": "vn3",
+      "medium": "data",
+      "quality": "good",
+      "trigger": "event",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f2",
+      "label": "Draft Protocol",
+      "from": "vn2",
+      "to": "vn3",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f3",
+      "label": "Study Scope",
+      "from": "vn4",
+      "to": "en1",
+      "medium": "decision",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f4",
+      "label": "Route Map",
+      "from": "en1",
+      "to": "en2",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f5",
+      "label": "Kick-off Output",
+      "from": "en2",
+      "to": "vn5",
+      "medium": "signal",
+      "quality": "good",
+      "trigger": "event",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f6",
+      "label": "Kick-off to Shell",
+      "from": "en2",
+      "to": "vn6",
+      "medium": "signal",
+      "quality": "good",
+      "trigger": "event",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f7",
+      "label": "Shell Structure",
+      "from": "vn6",
+      "to": "en3",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f8",
+      "label": "Shell Feedback",
+      "from": "en3",
+      "to": "en4",
+      "medium": "decision",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f9",
+      "label": "TLFs to Results Review",
+      "from": "vn3",
+      "to": "en4",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f10",
+      "label": "Proceed to Body Draft 1",
+      "from": "en4",
+      "to": "vn7",
+      "medium": "signal",
+      "quality": "good",
+      "trigger": "event",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f11",
+      "label": "TLFs to Body Draft 1",
+      "from": "vn3",
+      "to": "vn7",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f12",
+      "label": "Safety TLFs to Narratives 1",
+      "from": "vn3",
+      "to": "vn8",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f13",
+      "label": "Vendor Docs to Appendices 1",
+      "from": "vn3",
+      "to": "vn9",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f14",
+      "label": "Body 1 to Review 1",
+      "from": "vn7",
+      "to": "en5",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f15",
+      "label": "Review 1 to CR 1",
+      "from": "en5",
+      "to": "en6",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f16",
+      "label": "CR 1 to Body 2",
+      "from": "en6",
+      "to": "vn10",
+      "medium": "decision",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f17",
+      "label": "Narratives 1 to Narratives 2",
+      "from": "vn8",
+      "to": "vn11",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f18",
+      "label": "Appendices 1 to Appendices 2",
+      "from": "vn9",
+      "to": "vn12",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f19",
+      "label": "Body 2 to Review 2",
+      "from": "vn10",
+      "to": "en7",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f20",
+      "label": "Review 2 to Investigator Review",
+      "from": "en7",
+      "to": "en8",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f21",
+      "label": "Investigator Review to QC Body",
+      "from": "en8",
+      "to": "en9",
+      "medium": "decision",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f22",
+      "label": "Narratives 2 to QC",
+      "from": "vn11",
+      "to": "en10",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f23",
+      "label": "Appendices 2 to QC",
+      "from": "vn12",
+      "to": "en10",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f24",
+      "label": "QC Body to Approval",
+      "from": "en9",
+      "to": "en11",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f25",
+      "label": "QC Narratives/App to Approval",
+      "from": "en10",
+      "to": "en11",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f26",
+      "label": "Approval to RLCP Baseline",
+      "from": "en11",
+      "to": "en12",
+      "medium": "signal",
+      "quality": "good",
+      "trigger": "event",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f27",
+      "label": "RLCP Baseline to Publish",
+      "from": "en12",
+      "to": "vn13",
+      "medium": "signal",
+      "quality": "good",
+      "trigger": "event",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f28",
+      "label": "Publish to Distribute",
+      "from": "vn13",
+      "to": "vn14",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f29",
+      "label": "Distribute to Archive",
+      "from": "vn14",
+      "to": "vn15",
+      "medium": "signal",
+      "quality": "good",
+      "trigger": "event",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "f30",
+      "label": "Publish to Layman Summary",
+      "from": "vn13",
+      "to": "vn16",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "spine",
+      "variantOf": null
+    },
+    {
+      "id": "fw1",
+      "label": "RLCP to Manual POL",
+      "from": "vn5",
+      "to": "wn1",
+      "medium": "data",
+      "quality": "degraded",
+      "trigger": "push",
+      "layer": "waste",
+      "variantOf": "f5"
+    },
+    {
+      "id": "fw2",
+      "label": "Manual POL to Drag Drop",
+      "from": "wn1",
+      "to": "wn2",
+      "medium": "document",
+      "quality": "degraded",
+      "trigger": "push",
+      "layer": "waste",
+      "variantOf": "f5"
+    },
+    {
+      "id": "fw3",
+      "label": "Drag Drop to Template Mapping",
+      "from": "wn2",
+      "to": "wn3",
+      "medium": "document",
+      "quality": "broken",
+      "trigger": "push",
+      "layer": "waste",
+      "variantOf": "f5"
+    },
+    {
+      "id": "fw4",
+      "label": "Template Mapping to RLCP",
+      "from": "wn3",
+      "to": "vn5",
+      "medium": "signal",
+      "quality": "good",
+      "trigger": "event",
+      "layer": "waste",
+      "variantOf": "f5"
+    },
+    {
+      "id": "fw5",
+      "label": "SAP to Redundant Writing",
+      "from": "vn2",
+      "to": "wn4",
+      "medium": "document",
+      "quality": "degraded",
+      "trigger": "push",
+      "layer": "waste",
+      "variantOf": "f2"
+    },
+    {
+      "id": "fw6",
+      "label": "Redundant Writing to SAP",
+      "from": "wn4",
+      "to": "vn2",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "waste",
+      "variantOf": "f2"
+    },
+    {
+      "id": "fw7",
+      "label": "Results Review to Ad-Hoc",
+      "from": "en4",
+      "to": "wn5",
+      "medium": "signal",
+      "quality": "degraded",
+      "trigger": "event",
+      "layer": "waste",
+      "variantOf": "f10"
+    },
+    {
+      "id": "fw8",
+      "label": "Ad-Hoc to Body 1",
+      "from": "wn5",
+      "to": "vn7",
+      "medium": "document",
+      "quality": "degraded",
+      "trigger": "push",
+      "layer": "waste",
+      "variantOf": "f10"
+    },
+    {
+      "id": "fw9",
+      "label": "Body 1 to Copy Paste",
+      "from": "vn7",
+      "to": "wn6",
+      "medium": "data",
+      "quality": "broken",
+      "trigger": "push",
+      "layer": "waste",
+      "variantOf": "f11"
+    },
+    {
+      "id": "fw10",
+      "label": "Copy Paste to Body 1",
+      "from": "wn6",
+      "to": "vn7",
+      "medium": "document",
+      "quality": "degraded",
+      "trigger": "push",
+      "layer": "waste",
+      "variantOf": "f11"
+    },
+    {
+      "id": "fw11",
+      "label": "TLFs to Vendor Loops",
+      "from": "vn3",
+      "to": "wn7",
+      "medium": "document",
+      "quality": "degraded",
+      "trigger": "push",
+      "layer": "waste",
+      "variantOf": "f9"
+    },
+    {
+      "id": "fw12",
+      "label": "Vendor Loops to TLFs",
+      "from": "wn7",
+      "to": "vn3",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "waste",
+      "variantOf": "f9"
+    },
+    {
+      "id": "fw13",
+      "label": "Review 1 to Chasing",
+      "from": "en5",
+      "to": "wn8",
+      "medium": "signal",
+      "quality": "broken",
+      "trigger": "push",
+      "layer": "waste",
+      "variantOf": "f14"
+    },
+    {
+      "id": "fw14",
+      "label": "Chasing to Review 1",
+      "from": "wn8",
+      "to": "en5",
+      "medium": "signal",
+      "quality": "good",
+      "trigger": "event",
+      "layer": "waste",
+      "variantOf": "f14"
+    },
+    {
+      "id": "fw15",
+      "label": "Body 2 to Zombie Refs",
+      "from": "vn10",
+      "to": "wn9",
+      "medium": "data",
+      "quality": "degraded",
+      "trigger": "push",
+      "layer": "waste",
+      "variantOf": "f16"
+    },
+    {
+      "id": "fw16",
+      "label": "Zombie Refs to Body 2",
+      "from": "wn9",
+      "to": "vn10",
+      "medium": "document",
+      "quality": "degraded",
+      "trigger": "push",
+      "layer": "waste",
+      "variantOf": "f16"
+    },
+    {
+      "id": "fw17",
+      "label": "Appendices 1 to Bad PDFs",
+      "from": "vn9",
+      "to": "wn10",
+      "medium": "document",
+      "quality": "broken",
+      "trigger": "pull",
+      "layer": "waste",
+      "variantOf": "f13"
+    },
+    {
+      "id": "fw18",
+      "label": "Bad PDFs to Appendices 1",
+      "from": "wn10",
+      "to": "vn9",
+      "medium": "document",
+      "quality": "degraded",
+      "trigger": "push",
+      "layer": "waste",
+      "variantOf": "f13"
+    },
+    {
+      "id": "fw19",
+      "label": "QC Body to Late Re-QC",
+      "from": "en9",
+      "to": "wn11",
+      "medium": "signal",
+      "quality": "broken",
+      "trigger": "event",
+      "layer": "waste",
+      "variantOf": "f21"
+    },
+    {
+      "id": "fw20",
+      "label": "Late Re-QC to QC Body",
+      "from": "wn11",
+      "to": "en9",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "waste",
+      "variantOf": "f21"
+    },
+    {
+      "id": "fw21",
+      "label": "Baseline to Doc Cleanup",
+      "from": "en12",
+      "to": "wn12",
+      "medium": "document",
+      "quality": "broken",
+      "trigger": "event",
+      "layer": "waste",
+      "variantOf": "f26"
+    },
+    {
+      "id": "fw22",
+      "label": "Doc Cleanup to Baseline",
+      "from": "wn12",
+      "to": "en12",
+      "medium": "signal",
+      "quality": "good",
+      "trigger": "event",
+      "layer": "waste",
+      "variantOf": "f26"
+    },
+    {
+      "id": "fw23",
+      "label": "Publish to Hyperlink Recreate",
+      "from": "vn13",
+      "to": "wn13",
+      "medium": "signal",
+      "quality": "broken",
+      "trigger": "event",
+      "layer": "waste",
+      "variantOf": "f27"
+    },
+    {
+      "id": "fw24",
+      "label": "Hyperlink Recreate to Publish",
+      "from": "wn13",
+      "to": "vn13",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "waste",
+      "variantOf": "f27"
+    },
+    {
+      "id": "fv1",
+      "label": "TLFs to Live Linking",
+      "from": "vn3",
+      "to": "void1",
+      "medium": "data",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "void",
+      "variantOf": null
+    },
+    {
+      "id": "fv2",
+      "label": "Live Linking to Body 1",
+      "from": "void1",
+      "to": "vn7",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "void",
+      "variantOf": null
+    },
+    {
+      "id": "fv3",
+      "label": "Safety DB to AI Narrative",
+      "from": "vn1",
+      "to": "void2",
+      "medium": "data",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "void",
+      "variantOf": null
+    },
+    {
+      "id": "fv4",
+      "label": "AI Narrative to Narratives 1",
+      "from": "void2",
+      "to": "vn8",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "void",
+      "variantOf": null
+    },
+    {
+      "id": "fv5",
+      "label": "Route Map to Orchestrator",
+      "from": "en1",
+      "to": "void3",
+      "medium": "signal",
+      "quality": "good",
+      "trigger": "event",
+      "layer": "void",
+      "variantOf": null
+    },
+    {
+      "id": "fv6",
+      "label": "Orchestrator to Review 1",
+      "from": "void3",
+      "to": "en5",
+      "medium": "signal",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "void",
+      "variantOf": null
+    },
+    {
+      "id": "fv7",
+      "label": "Protocol to Visuals Agent",
+      "from": "void4",
+      "to": "vn6",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "void",
+      "variantOf": null
+    },
+    {
+      "id": "fv8",
+      "label": "Published CSR to Layman Summarizer",
+      "from": "vn13",
+      "to": "void5",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "void",
+      "variantOf": null
+    },
+    {
+      "id": "fv9",
+      "label": "Layman Summarizer to Layman Summary",
+      "from": "void5",
+      "to": "vn16",
+      "medium": "document",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "void",
+      "variantOf": null
+    },
+    {
+      "id": "fv10",
+      "label": "Data Cleaning Agent to DB Lock",
+      "from": "void6",
+      "to": "vn1",
+      "medium": "signal",
+      "quality": "good",
+      "trigger": "push",
+      "layer": "void",
+      "variantOf": null
+    }
+  ],
+  "forces": [
+    {
+      "id": "F1",
+      "actingOn": "vn7",
+      "category": "system",
+      "subtype": "accessibility",
+      "polarity": "constraining",
+      "intensity": 3,
+      "description": "Data is trapped in static PDF/RTF formats from Nexus, requiring manual transcription into Veeva/Word.",
+      "evidence": "Quotes: 'At the moment the entire writing is manual, so we really copy and paste... highly error prone.'",
+      "changeability": "structural"
+    },
+    {
+      "id": "F2",
+      "actingOn": "en12",
+      "category": "system",
+      "subtype": "logic",
+      "polarity": "constraining",
+      "intensity": 3,
+      "description": "Veeva auto-matching pulls all documents associated with a study number upon state change to Baseline.",
+      "evidence": "Quotes: 'When you change the status... to baseline, then all documents are flying in... sometimes 300 documents... remove them all manually.'",
+      "changeability": "near-term"
+    },
+    {
+      "id": "F3",
+      "actingOn": "vn5",
+      "category": "system",
+      "subtype": "validation",
+      "polarity": "constraining",
+      "intensity": 2,
+      "description": "Strict 58-character limit for Published Output Location (POL) causes downstream failures if exceeded.",
+      "evidence": "Quotes: 'If you cross 59... you'll have to redo the whole process just because you have missed a character.'",
+      "changeability": "near-term"
+    },
+    {
+      "id": "F4",
+      "actingOn": "en5",
+      "category": "cultural",
+      "subtype": "habit",
+      "polarity": "constraining",
+      "intensity": 2,
+      "description": "Reviewers fail to click 'complete' in Veeva workflows, forcing MWs to manually chase them.",
+      "evidence": "Quotes: 'We don't have a very strong culture here... we have to send multiple reminders to people to hit that button.'",
+      "changeability": "near-term"
+    },
+    {
+      "id": "F5",
+      "actingOn": "vn8",
+      "category": "org",
+      "subtype": "scale",
+      "polarity": "constraining",
+      "intensity": 3,
+      "description": "Massive volume of unstructured data needs to be manually synthesized into 100-300 narratives per study.",
+      "evidence": "Quotes: 'Writing of 300 narratives or a big study that is quite time consuming... a human process.'",
+      "changeability": "structural"
+    },
+    {
+      "id": "F6",
+      "actingOn": "vn13",
+      "category": "system",
+      "subtype": "brittleness",
+      "polarity": "constraining",
+      "intensity": 3,
+      "description": "Hyperlinks break entirely if documents are reverted from Baseline back to Draft state.",
+      "evidence": "Quotes: 'When they change something in the study report... So we have to do all hyperlinks new because then nothing is working again... 140 documents... again.'",
+      "changeability": "near-term"
+    },
+    {
+      "id": "F7",
+      "actingOn": "vn9",
+      "category": "org",
+      "subtype": "dependency",
+      "polarity": "constraining",
+      "intensity": 3,
+      "description": "Dependencies on up to 12 different external vendors for data (e.g. bioanalytical, subject PDFs) with varying standards.",
+      "evidence": "Quotes: 'organize always have some missing samples somewhere... take sometimes three months, four months or even half a year.'",
+      "changeability": "structural"
+    },
+    {
+      "id": "F8",
+      "actingOn": "vn10",
+      "category": "cultural",
+      "subtype": "habit",
+      "polarity": "constraining",
+      "intensity": 2,
+      "description": "Human error relying on copy-pasting previous documents carries over outdated or inappropriate text/references.",
+      "evidence": "Quotes: 'sometimes the people use copy over an old reference... and it's not a study about animals.'",
+      "changeability": "near-term"
+    },
+    {
+      "id": "F9",
+      "actingOn": "vn3",
+      "category": "system",
+      "subtype": "accessibility",
+      "polarity": "constraining",
+      "intensity": 3,
+      "description": "Highly siloed data across Nexus, GoAnywhere, SharePoint, and Veeva creates permission bottlenecks.",
+      "evidence": "Quotes: 'Every system is handling the access separately... sharing of results or switching them from one system to another... is a pain point for us.'",
+      "changeability": "structural"
+    }
+  ],
+  "frictionPoints": [
+    {
+      "id": "FP1",
+      "label": "FP1",
+      "title": "The Manual Evidence Transcription Bottleneck",
+      "severity": "critical",
+      "primaryNode": "vn7",
+      "affectedNodes": [
+        "en9",
+        "vn3"
+      ],
+      "convergence": "Lack of system integration (F1) combined with late ad-hoc analysis requests forces MWs to manually copy-paste static data, resulting in massive QC overhead.",
+      "valueNaturesBlocked": [
+        "artifact_production"
+      ],
+      "configMismatch": true,
+      "feedbackLoop": "L1",
+      "loopNarrative": "Manual transcription creates errors -> Errors require 100% QC -> QC finds errors -> Manual updates are made -> Late statistical changes arrive -> Entire manual copy-paste + QC cycle must repeat.",
+      "estimatedCost": "Hundreds of MW and QC hours per CSR; high risk of data inconsistency in regulatory submissions.",
+      "leveragePoint": "Implement machine-readable integration layer between Nexus and Veeva/Word (e.g., Yseop).",
+      "leverageType": "automate",
+      "prerequisites": [
+        "Standardized API output from Nexus/ADaM"
+      ]
+    },
+    {
+      "id": "FP2",
+      "label": "FP2",
+      "title": "RLCP Baseline & Hyperlink Collapse",
+      "severity": "high",
+      "primaryNode": "en12",
+      "affectedNodes": [
+        "vn13",
+        "vn5"
+      ],
+      "convergence": "Veeva auto-matching rules (F2) and fragile hyperlink structures (F6) mean any late document change requires reverting the entire plan, triggering an avalanche of irrelevant documents and breaking all links.",
+      "valueNaturesBlocked": [
+        "infrastructure",
+        "artifact_production"
+      ],
+      "configMismatch": false,
+      "feedbackLoop": "L2",
+      "loopNarrative": "State changed to Baseline -> Irrelevant docs flood in -> Manual cleanup -> Minor revision needed -> Revert to Draft -> Fix revision -> State changed to Baseline -> Irrelevant docs flood in again -> Links break.",
+      "estimatedCost": "3-5 days of pure rework per minor revision at the publishing stage.",
+      "leveragePoint": "Refine Veeva metadata logic to filter matched documents, or script a macro to auto-remove non-locked documents.",
+      "leverageType": "restructure",
+      "prerequisites": [
+        "IT adjustment of Veeva RIM configuration"
+      ]
+    },
+    {
+      "id": "FP3",
+      "label": "FP3",
+      "title": "High-Volume Narrative Drafting",
+      "severity": "high",
+      "primaryNode": "vn8",
+      "affectedNodes": [],
+      "convergence": "The sheer scale of patient events (F5) colliding with manual, stylistic writing processes creates a massive, non-scientific time sink.",
+      "valueNaturesBlocked": [
+        "artifact_production"
+      ],
+      "configMismatch": true,
+      "feedbackLoop": null,
+      "loopNarrative": "N/A",
+      "estimatedCost": "60+ person-days per large Phase 3 study.",
+      "leveragePoint": "Generative AI extraction and summarization of CIOMS/Safety data into standard narrative templates.",
+      "leverageType": "automate",
+      "prerequisites": [
+        "Validated GenAI prompt templates",
+        "Structured access to Argus/Safety DB"
+      ]
+    },
+    {
+      "id": "FP4",
+      "label": "FP4",
+      "title": "Reviewer Orchestration Drag",
+      "severity": "moderate",
+      "primaryNode": "en5",
+      "affectedNodes": [
+        "en1"
+      ],
+      "convergence": "Cultural habit of ignoring Veeva tasks (F4) forces Medical Writers to act as secretaries, manually tracking 24-30 reviewers across email and Teams.",
+      "valueNaturesBlocked": [
+        "coordination",
+        "alignment"
+      ],
+      "configMismatch": true,
+      "feedbackLoop": "L4",
+      "loopNarrative": "Reviewers finish but don't click approve -> MW acts as secretary checking system -> MW sends email/Teams nudge -> Waits -> Repeats until unlocked.",
+      "estimatedCost": "Wasted MW capacity focused on administrative chasing instead of scientific synthesis.",
+      "leveragePoint": "Auto-Orchestrator syncing Route Map with Veeva states.",
+      "leverageType": "automate",
+      "prerequisites": [
+        "API access to Veeva workflow states"
+      ]
+    },
+    {
+      "id": "FP5",
+      "label": "FP5",
+      "title": "Fragmented External Data Handoffs",
+      "severity": "high",
+      "primaryNode": "vn9",
+      "affectedNodes": [
+        "en10",
+        "vn3"
+      ],
+      "convergence": "Reliance on up to 12 different external vendors (F7) running separate IT silos (F9) means data integration is incredibly painful and blocks downstream QC steps.",
+      "valueNaturesBlocked": [
+        "infrastructure",
+        "artifact_production"
+      ],
+      "configMismatch": true,
+      "feedbackLoop": "L3",
+      "loopNarrative": "Vendor delivers bad PDF -> Rejected -> Waits weeks for vendor to fix -> Vendor fixes -> Delivered again -> Repeat.",
+      "estimatedCost": "Months of cumulative project delay per study.",
+      "leveragePoint": "Direct API integration or bringing subject PDF generation in-house.",
+      "leverageType": "restructure",
+      "prerequisites": [
+        "Vendor IT cooperation"
+      ]
+    },
+    {
+      "id": "FP6",
+      "label": "FP6",
+      "title": "Data Cleaning Crunch",
+      "severity": "critical",
+      "primaryNode": "vn1",
+      "affectedNodes": [
+        "vn3"
+      ],
+      "convergence": "Absolute requirement for 100% clean data before lock forces impossible manual query load on CDMs inside a 30-day window.",
+      "valueNaturesBlocked": [
+        "risk_reduction"
+      ],
+      "configMismatch": true,
+      "feedbackLoop": "L6",
+      "loopNarrative": "CML/DM spots impossible data -> Raises query to site -> Site takes 5 days to respond (often incorrectly) -> Re-review and re-query loop.",
+      "estimatedCost": "Massive human stress, burn-out, and hard constraints on study pacing.",
+      "leveragePoint": "Agentic AI reading EDC data and auto-drafting logical queries to sites.",
+      "leverageType": "automate",
+      "prerequisites": [
+        "Read/Write API access to EDC (e.g., Rave)"
+      ]
+    },
+    {
+      "id": "FP7",
+      "label": "FP7",
+      "title": "The Redundant Planning Tax (Upstream)",
+      "severity": "moderate",
+      "primaryNode": "vn2",
+      "affectedNodes": [],
+      "convergence": "Strict governance requires a full Statistical Analysis Plan (SAP) for every study, colliding with the reality that phase 1 'cookie-cutter' studies are 90% identical.",
+      "valueNaturesBlocked": [
+        "knowledge_generation"
+      ],
+      "configMismatch": true,
+      "feedbackLoop": null,
+      "loopNarrative": "N/A",
+      "estimatedCost": "2-4 weeks of wasted statistician planning time per standard study.",
+      "leveragePoint": "Modular or exempt SAP models for standard studies; AI drafting based on protocol.",
+      "leverageType": "automate",
+      "prerequisites": [
+        "Governance process update"
+      ]
+    },
+    {
+      "id": "FP8",
+      "label": "FP8",
+      "title": "Ad-Hoc Analytics Collision",
+      "severity": "high",
+      "primaryNode": "en4",
+      "affectedNodes": [
+        "vn7"
+      ],
+      "convergence": "During Results Review, the team requests new combinations of data (in-text tables). This collides with a constrained programming team already delivering 150-200 base outputs.",
+      "valueNaturesBlocked": [
+        "alignment"
+      ],
+      "configMismatch": true,
+      "feedbackLoop": "L5",
+      "loopNarrative": "Results Review requests new table -> Programmers delay -> MW tries to manually hack tables together -> Errors caught in review -> Another request to programmers.",
+      "estimatedCost": "Significant delays to Draft 1 completion and high risk of transcription errors.",
+      "leveragePoint": "Self-serve, verified table generators for MWs and Statisticians.",
+      "leverageType": "restructure",
+      "prerequisites": [
+        "Standardized data warehouse access"
+      ]
+    },
+    {
+      "id": "FP9",
+      "label": "FP9",
+      "title": "Template Structural Clashes",
+      "severity": "moderate",
+      "primaryNode": "vn5",
+      "affectedNodes": [
+        "vn9"
+      ],
+      "convergence": "Merck uses a custom internal document structure, while external vendors use the industry-standard ICH E3 structure.",
+      "valueNaturesBlocked": [
+        "infrastructure"
+      ],
+      "configMismatch": true,
+      "feedbackLoop": "L7",
+      "loopNarrative": "External doc comes in (ICH E3) -> DST manually maps to Merck format -> Feedback sent back -> Vendor revises in their format -> DST manually translates again.",
+      "estimatedCost": "Constant administrative overhead for every external document submission.",
+      "leveragePoint": "Global harmonization to ICH E3 templates.",
+      "leverageType": "eliminate",
+      "prerequisites": [
+        "Internal template updates"
+      ]
+    },
+    {
+      "id": "FP10",
+      "label": "FP10",
+      "title": "Multi-Author Harmonization Drag",
+      "severity": "high",
+      "primaryNode": "vn7",
+      "affectedNodes": [
+        "vn10"
+      ],
+      "convergence": "24-30 different reviewers working on the same document collides with strict formatting guidelines, resulting in Frankenstein-like drafts and 'Zombie References'.",
+      "valueNaturesBlocked": [
+        "artifact_production"
+      ],
+      "configMismatch": true,
+      "feedbackLoop": null,
+      "loopNarrative": "N/A",
+      "estimatedCost": "Heavy manual editing to fix formatting, zeroes, brackets, and terminology inconsistencies.",
+      "leveragePoint": "AI-driven Auto-QC for style guide adherence and reference checking.",
+      "leverageType": "automate",
+      "prerequisites": [
+        "PerfectIT / Style Guide LLM prompting"
+      ]
+    },
+    {
+      "id": "FP11",
+      "label": "FP11",
+      "title": "The Layman Translation Burden",
+      "severity": "moderate",
+      "primaryNode": "vn16",
+      "affectedNodes": [],
+      "convergence": "Strict EU transparency regulations require a layman's summary, colliding with the extreme technical density of a 400+ page CSR.",
+      "valueNaturesBlocked": [
+        "compliance"
+      ],
+      "configMismatch": true,
+      "feedbackLoop": null,
+      "loopNarrative": "N/A",
+      "estimatedCost": "10 to 12 hours of highly specialized time to condense the study into 2-3 pages.",
+      "leveragePoint": "LLM summarization agent tuned to an 8th-grade reading level.",
+      "leverageType": "automate",
+      "prerequisites": [
+        "Approved prompt templates and finalized CSR PDF"
+      ]
+    }
+  ],
+  "frictionThemes": [],
+  "feedbackLoops": [
+    {
+      "id": "L1",
+      "label": "R1 — The Copy-Paste Rework Cycle",
+      "polarity": "reinforcing",
+      "description": "Late statistical changes require manual re-typing into the CSR body, which invalidates previous QC checks, triggering a full re-QC cycle, which eats up time and delays the document, inviting even more late changes.",
+      "amplification": "accelerating",
+      "breakPoint": "Data-to-text live linking so changes automatically update the document and flag only affected sections for Re-QC.",
+      "fromNode": "en9",
+      "toNode": "vn7",
+      "color": "#dc2626",
+      "weight": 1.8
+    },
+    {
+      "id": "L2",
+      "label": "R2 — RLCP Baseline Reversion Penalty",
+      "polarity": "reinforcing",
+      "description": "Changing the RLCP status to Baseline auto-matches hundreds of irrelevant documents. DST manually deletes them. If a late change occurs, they must revert to Draft, make the change, and return to Baseline—triggering the auto-match flood all over again and breaking links.",
+      "amplification": "stable",
+      "breakPoint": "Change Veeva configuration to match on tighter classification parameters, or implement a 'delete unlocked' macro.",
+      "fromNode": "vn13",
+      "toNode": "en12",
+      "color": "#dc2626",
+      "weight": 1.5
+    },
+    {
+      "id": "L3",
+      "label": "R3 — Vendor Iteration Loop",
+      "polarity": "reinforcing",
+      "description": "Outsourced vendors deliver bad data (like broken Subject PDFs). Because they use disparate systems, it takes weeks to communicate the error, wait for their fix, and receive it back—often resulting in a new error, continually pushing back the QC gate.",
+      "amplification": "stable",
+      "breakPoint": "Bring subject PDF generation in-house directly connected to Polaris, or enforce API-driven quality checks upon ingestion.",
+      "fromNode": "wn10",
+      "toNode": "vn9",
+      "color": "#dc2626",
+      "weight": 1.2
+    },
+    {
+      "id": "L4",
+      "label": "R4 — The Reviewer Chasing Cycle",
+      "polarity": "reinforcing",
+      "description": "Reviewers finish but don't click approve in Veeva. The MW acts as a secretary checking the system, sending an email nudge, waiting, checking again, and repeating until unlocked.",
+      "amplification": "stable",
+      "breakPoint": "Auto-Orchestrator syncing Route Map with Veeva states to automate chasing.",
+      "fromNode": "wn8",
+      "toNode": "en5",
+      "color": "#dc2626",
+      "weight": 1.4
+    },
+    {
+      "id": "L5",
+      "label": "R5 — The Ad-Hoc Table Drag",
+      "polarity": "reinforcing",
+      "description": "Results Review requests new tables. Programmers are delayed. MW tries to manually hack tables together. Errors are caught in review, triggering another request to the programmers.",
+      "amplification": "accelerating",
+      "breakPoint": "Self-serve, verified table generators for MWs and Statisticians.",
+      "fromNode": "wn5",
+      "toNode": "en4",
+      "color": "#dc2626",
+      "weight": 1.6
+    },
+    {
+      "id": "L6",
+      "label": "R6 — The Data Cleaning Query Ping-Pong",
+      "polarity": "reinforcing",
+      "description": "CML/DM spots impossible data, raises a query to the site. The site takes 5 days to respond (often fixing it incorrectly), causing the DM to re-review and re-query while the 30-day clock ticks down.",
+      "amplification": "accelerating",
+      "breakPoint": "Agentic AI reading EDC data and auto-drafting logical queries directly to sites.",
+      "fromNode": "vn1",
+      "toNode": "vn1",
+      "color": "#dc2626",
+      "weight": 1.9
+    },
+    {
+      "id": "L7",
+      "label": "R7 — The Template Translation Tax",
+      "polarity": "reinforcing",
+      "description": "External vendor sends doc in ICH E3 format. DST manually maps to Merck format. Feedback sent back. Vendor revises in their format. DST manually translates again.",
+      "amplification": "stable",
+      "breakPoint": "Global harmonization to ICH E3 templates.",
+      "fromNode": "wn3",
+      "toNode": "vn9",
+      "color": "#dc2626",
+      "weight": 1.3
+    }
+  ],
+  "capabilityProfiles": [
+    {
+      "id": "agent-results-transcriber",
+      "name": "Results Transcriber Agent",
+      "type": "generation",
+      "maturity": "conceptual",
+      "description": "Agent that reads structured JSON/XML outputs from ADaM/Nexus and automatically populates in-text tables and standard results boilerplate in the CSR Word document, maintaining live links to the source."
+    },
+    {
+      "id": "agent-narrative-gen",
+      "name": "Narrative Generation Agent",
+      "type": "generation",
+      "maturity": "prototype",
+      "description": "LLM-based agent that ingests patient CIOMS forms and safety listings, applies the Merck Style Guide, and generates cohesive, standardized patient safety narratives for appendix inclusion."
+    },
+    {
+      "id": "agent-orchestrator",
+      "name": "Review Orchestrator & Chaser",
+      "type": "orchestration",
+      "maturity": "conceptual",
+      "description": "Automates the Route Map. Monitors Veeva workflow states and sends automated Teams/Email nudges to reviewers who haven't clicked 'Approve', escalating automatically if SLAs are breached."
+    },
+    {
+      "id": "agent-auto-qc",
+      "name": "Auto-QC Verification Agent",
+      "type": "verification",
+      "maturity": "conceptual",
+      "description": "Agent that scans the final Word document, identifies statistical claims and data points, and cross-references them against the source TLF repository to highlight discrepancies prior to human QC."
+    },
+    {
+      "id": "agent-protocol-visuals",
+      "name": "Protocol-to-Visuals Agent",
+      "type": "generation",
+      "maturity": "conceptual",
+      "description": "AI agent that reads protocol schedules of assessments (SoA) and auto-generates visual patient flow diagrams and timelines directly into the CSR template."
+    },
+    {
+      "id": "agent-layman-summary",
+      "name": "Layman Summarization Agent",
+      "type": "generation",
+      "maturity": "prototype",
+      "description": "Agent that ingests the finalized 400+ page CSR and generates a 2-page, 8th-grade reading level summary for mandatory patient transparency disclosure."
+    },
+    {
+      "id": "agent-data-cleaning",
+      "name": "Data Cleaning & Query Agent",
+      "type": "verification",
+      "maturity": "conceptual",
+      "description": "Monitors incoming EDC data, applies cross-field logical checks (e.g., hemoglobin limits vs. survival), and automatically drafts site queries to accelerate the 30-day DB lock crunch."
+    }
+  ],
+  "activeLayers": [],
+  "selectedElement": null
+}
