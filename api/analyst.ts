@@ -6,15 +6,32 @@ type AnalystChatMessage = {
 type AnalystRequestPayload = {
   fileName: string;
   model?: string;
+  mode?: "normal" | "walkthrough";
   selectedElementSummary: string;
   messages: AnalystChatMessage[];
   vfdData: any;
 };
 
+type AnalystAnnotationStyle =
+  | "focus"
+  | "bottleneck"
+  | "risk"
+  | "opportunity"
+  | "change-impact";
+
+type AnalystAnnotationTargetType = "node" | "flow" | "friction" | "loop";
+
+type AnalystAnnotation = {
+  targetType: AnalystAnnotationTargetType;
+  ids: string[];
+  style: AnalystAnnotationStyle;
+  label?: string;
+};
+
 const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
 
-function buildAnalystInstructions(): string {
-  return [
+function buildAnalystInstructions(mode: "normal" | "walkthrough"): string {
+  const baseInstructions = [
     "You are Analyst AI for a Value Friction Diagram (VFD).",
     "Your job is to help a process analyst understand the modeled process, identify the main issues, explain why they persist, and suggest useful next analytical steps or intervention ideas.",
     "Use plain process language first. Avoid jargon where possible. Prefer words like step, handoff, delay, rework, approval burden, support work, missing capability, issue, bottleneck, and next step.",
@@ -36,7 +53,32 @@ function buildAnalystInstructions(): string {
     "State labels describe the condition of a step under current pressure.",
     "Transformation tags and value labels are semantic descriptors shown in the node band.",
     "Structure your response, when useful, as: what the model shows, what it likely means, and what to do next.",
-  ].join("\n");
+    "Return only valid JSON with this exact shape: {\"text\":\"string\",\"annotations\":[{\"targetType\":\"node|flow|friction|loop\",\"ids\":[\"existing-id\"],\"style\":\"focus|bottleneck|risk|opportunity|change-impact\",\"label\":\"optional short label\"}]}",
+    "Use the text field for the user-facing answer in plain language. Never mention internal IDs in the text field.",
+    "Use annotations only when they materially help the explanation. If no highlight is useful, return an empty annotations array.",
+    "Only use IDs from the highlightable elements list provided below. Never invent IDs.",
+  ];
+
+  const modeInstructions =
+    mode === "walkthrough"
+      ? [
+          "You are in walkthrough mode.",
+          "Answer by picking one single focal aspect of the question that is most important to show on the graph.",
+          "Do not try to answer the whole question exhaustively.",
+          "Keep the response tight and visual. Explain one focal issue, chain, or intervention area only.",
+          "In walkthrough mode, structure the text as: Focus, Why it matters, What to look at next.",
+          "In walkthrough mode, include 1 or 2 annotation objects when possible, and keep them tightly aligned to the single focal aspect.",
+          "Always use explicit numbering for walkthrough annotations and reuse the same numbering in the text, for example 1. Intake issue, 2. Rework hotspot, 3. Downstream effect.",
+          "When you provide annotation labels, refer to those exact same labels in the text so the reader can match the explanation to the highlighted elements.",
+          "Use short sections with blank lines between them so the walkthrough is easy to scan.",
+        ]
+      : [
+          "You are in normal analysis mode.",
+          "You may answer more broadly, but stay grounded in the model.",
+          "Use annotations selectively to support the explanation when useful.",
+        ];
+
+  return [...baseInstructions, ...modeInstructions].join("\n");
 }
 
 function extractAnthropicText(responseJson: any): string {
@@ -59,6 +101,90 @@ function describeMetric(metric: any): string | null {
 
 function getNodeLabel(node: any): string {
   return node?.label || node?.sublabel || "Unnamed step";
+}
+
+function getFlowLabel(flow: any, labelFor: (id: string | undefined | null) => string): string {
+  return flow?.label || `${labelFor(flow?.from)} -> ${labelFor(flow?.to)}`;
+}
+
+function normalizeJsonText(rawText: string): string {
+  const trimmed = rawText.trim();
+  if (trimmed.startsWith("```")) {
+    return trimmed.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+  }
+  return trimmed;
+}
+
+function sanitizeAnnotations(rawAnnotations: any, vfdData: any): AnalystAnnotation[] {
+  if (!Array.isArray(rawAnnotations)) return [];
+
+  const validStyles = new Set<AnalystAnnotationStyle>([
+    "focus",
+    "bottleneck",
+    "risk",
+    "opportunity",
+    "change-impact",
+  ]);
+  const validTargetTypes = new Set<AnalystAnnotationTargetType>(["node", "flow", "friction", "loop"]);
+  const allowedIds = {
+    node: new Set((Array.isArray(vfdData?.nodes) ? vfdData.nodes : []).map((entry: any) => entry.id)),
+    flow: new Set((Array.isArray(vfdData?.flows) ? vfdData.flows : []).map((entry: any) => entry.id)),
+    friction: new Set((Array.isArray(vfdData?.frictionPoints) ? vfdData.frictionPoints : []).map((entry: any) => entry.id)),
+    loop: new Set((Array.isArray(vfdData?.feedbackLoops) ? vfdData.feedbackLoops : []).map((entry: any) => entry.id)),
+  };
+
+  return rawAnnotations
+    .slice(0, 4)
+    .map((annotation: any) => {
+      const targetType = annotation?.targetType;
+      const style = annotation?.style;
+      if (!validTargetTypes.has(targetType) || !validStyles.has(style)) {
+        return null;
+      }
+
+      const ids = Array.from(
+        new Set(
+          (Array.isArray(annotation?.ids) ? annotation.ids : []).filter(
+            (id: any) =>
+              typeof id === "string" &&
+              allowedIds[targetType as AnalystAnnotationTargetType].has(id)
+          )
+        )
+      ).slice(0, 5);
+
+      if (ids.length === 0) {
+        return null;
+      }
+
+      return {
+        targetType,
+        ids,
+        style,
+        label: typeof annotation?.label === "string" ? annotation.label.trim().slice(0, 80) : undefined,
+      } satisfies AnalystAnnotation;
+    })
+    .filter(Boolean) as AnalystAnnotation[];
+}
+
+function parseAnalystResponse(rawText: string, vfdData: any): { text: string; annotations: AnalystAnnotation[] } {
+  const normalized = normalizeJsonText(rawText);
+
+  try {
+    const parsed = JSON.parse(normalized);
+    if (typeof parsed?.text === "string") {
+      return {
+        text: parsed.text.trim(),
+        annotations: sanitizeAnnotations(parsed.annotations, vfdData),
+      };
+    }
+  } catch {
+    // Fall back to text-only responses.
+  }
+
+  return {
+    text: rawText.trim(),
+    annotations: [],
+  };
 }
 
 function buildAnalystContext(vfdData: any): string {
@@ -140,6 +266,13 @@ function buildAnalystContext(vfdData: any): string {
     return `- ${parts.join(" | ")}`;
   });
 
+  const highlightableNodes = nodes.map((node: any) => `- ${node.id}: ${getNodeLabel(node)}`);
+  const highlightableFlows = flows.map((flow: any) => `- ${flow.id}: ${getFlowLabel(flow, labelFor)}`);
+  const highlightableFrictions = frictions.map(
+    (friction: any) => `- ${friction.id}: ${friction.title || "Unnamed friction point"}`
+  );
+  const highlightableLoops = loops.map((loop: any) => `- ${loop.id}: ${loop.label || "Unnamed feedback loop"}`);
+
   return [
     "Process framing:",
     `- process name: ${definition.processName || "Unnamed process"}`,
@@ -165,6 +298,19 @@ function buildAnalystContext(vfdData: any): string {
     "",
     "Feedback loops:",
     ...loopSummaries,
+    "",
+    "Highlightable element IDs for annotations only:",
+    "Nodes:",
+    ...highlightableNodes,
+    "",
+    "Flows:",
+    ...highlightableFlows,
+    "",
+    "Friction points:",
+    ...highlightableFrictions,
+    "",
+    "Feedback loops:",
+    ...highlightableLoops,
   ]
     .filter(Boolean)
     .join("\n");
@@ -173,14 +319,17 @@ function buildAnalystContext(vfdData: any): string {
 async function runAnalystRequest(
   payload: AnalystRequestPayload,
   apiKey: string
-): Promise<{ text: string }> {
+): Promise<{ text: string; annotations: AnalystAnnotation[] }> {
   if (!apiKey) {
     throw new Error("ANTHROPIC_API_KEY is not configured on the server.");
   }
 
+  const mode = payload.mode === "walkthrough" ? "walkthrough" : "normal";
+
   const systemPrompt = [
-    buildAnalystInstructions(),
+    buildAnalystInstructions(mode),
     `Current file: ${payload.fileName}`,
+    `Current response mode: ${mode}`,
     payload.selectedElementSummary,
     "Current process model context:",
     buildAnalystContext(payload.vfdData),
@@ -214,7 +363,7 @@ async function runAnalystRequest(
     throw new Error("No assistant text was returned.");
   }
 
-  return { text };
+  return parseAnalystResponse(text, payload.vfdData);
 }
 
 export default async function handler(req: any, res: any) {

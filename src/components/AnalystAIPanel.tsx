@@ -5,20 +5,46 @@ interface AnalystAIPanelProps {
   fileName: string;
   selectedElement: any;
   selectedType: string | null;
+  onAnnotationsChange: (annotations: AnalystAnnotation[]) => void;
 }
 
 type ChatMessage = {
   role: "user" | "assistant";
   text: string;
+  annotations?: AnalystAnnotation[];
+  responseMode?: "normal" | "walkthrough";
+};
+
+export type AnalystAnnotationStyle =
+  | "focus"
+  | "bottleneck"
+  | "risk"
+  | "opportunity"
+  | "change-impact";
+
+export type AnalystAnnotationTargetType = "node" | "flow" | "friction" | "loop";
+
+export type AnalystAnnotation = {
+  targetType: AnalystAnnotationTargetType;
+  ids: string[];
+  style: AnalystAnnotationStyle;
+  label?: string;
 };
 
 const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
-const EXAMPLE_QUESTIONS = [
+const ANALYSIS_EXAMPLE_QUESTIONS = [
   "If I could only change three things in this process, what should I change first?",
   "Which architectural changes would have the biggest impact on this workflow?",
   "Where are the root structural problems versus local symptoms?",
   "How much resistance should I expect if I try to introduce agentic capabilities into this process?",
   "What should I investigate before redesigning this process?",
+];
+const WALKTHROUGH_EXAMPLE_QUESTIONS = [
+  "Walk me through the single biggest bottleneck in this process.",
+  "Show me the one handoff where value is lost most visibly.",
+  "Walk me through the main rework loop and why it persists.",
+  "Show me the part of the process that would resist agentic change the most.",
+  "Walk me through one high-leverage redesign opportunity.",
 ];
 
 function renderInlineMarkdown(text: string): React.ReactNode[] {
@@ -173,22 +199,59 @@ function buildSelectedElementSummary(selectedElement: any, selectedType: string 
   return `A process element is currently selected (${selectedType}).`;
 }
 
+function ensureEnumeratedAnnotations(
+  mode: "normal" | "walkthrough",
+  annotations: AnalystAnnotation[]
+): AnalystAnnotation[] {
+  if (mode !== "walkthrough") {
+    return annotations;
+  }
+
+  return annotations.map((annotation, index) => {
+    const prefix = `${index + 1}. `;
+    const label = annotation.label?.trim() || `${annotation.targetType} highlight`;
+    return {
+      ...annotation,
+      label: label.match(/^\d+\.\s/) ? label : `${prefix}${label}`,
+    };
+  });
+}
+
+function formatAssistantText(
+  mode: "normal" | "walkthrough",
+  text: string,
+  annotations: AnalystAnnotation[]
+): string {
+  if (mode !== "walkthrough" || annotations.length === 0) {
+    return text;
+  }
+
+  const legendLines = annotations
+    .map((annotation) => `- ${annotation.label || `${annotation.targetType} highlight`}`)
+    .join("\n");
+
+  return [`## Walkthrough Markers`, legendLines, "", text.trim()].join("\n");
+}
+
 export default function AnalystAIPanel({
   vfdData,
   fileName,
   selectedElement,
   selectedType,
+  onAnnotationsChange,
 }: AnalystAIPanelProps): React.ReactElement {
   const [draft, setDraft] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<"normal" | "walkthrough">("normal");
 
   const selectedElementSummary = useMemo(
     () => buildSelectedElementSummary(selectedElement, selectedType),
     [selectedElement, selectedType]
   );
   const hasConversation = messages.length > 0 || isSending;
+  const exampleQuestions = mode === "walkthrough" ? WALKTHROUGH_EXAMPLE_QUESTIONS : ANALYSIS_EXAMPLE_QUESTIONS;
 
   const submitQuestion = async (questionOverride?: string) => {
     const question = (questionOverride ?? draft).trim();
@@ -211,6 +274,7 @@ export default function AnalystAIPanel({
         body: JSON.stringify({
           fileName,
           model: DEFAULT_MODEL,
+          mode,
           selectedElementSummary,
           messages: nextMessages,
           vfdData,
@@ -239,9 +303,18 @@ export default function AnalystAIPanel({
         throw new Error(rawBody || "No assistant text was returned.");
       }
 
-      setMessages((current) => [...current, { role: "assistant", text: assistantText }]);
+      const rawAnnotations = Array.isArray(responseJson?.annotations) ? responseJson.annotations : [];
+      const annotations = ensureEnumeratedAnnotations(mode, rawAnnotations);
+      const formattedText = formatAssistantText(mode, assistantText, annotations);
+
+      onAnnotationsChange(annotations);
+      setMessages((current) => [
+        ...current,
+        { role: "assistant", text: formattedText, annotations, responseMode: mode },
+      ]);
     } catch (err: any) {
       setError(err?.message || "The assistant could not answer the question.");
+      onAnnotationsChange([]);
       setMessages(previousMessages);
     } finally {
       setIsSending(false);
@@ -262,13 +335,38 @@ export default function AnalystAIPanel({
           Analyst AI
         </div>
         <div style={{ fontSize: 12, color: "#64748b", lineHeight: 1.5, marginBottom: hasConversation ? 6 : 10 }}>
-          Ask about the process, the main issues, likely causes, or what to investigate next.
+          {mode === "walkthrough"
+            ? "Walkthrough mode focuses on one aspect at a time and points to it directly on the graph."
+            : "Ask about the process, the main issues, likely causes, or what to investigate next."}
+        </div>
+        <div style={{ display: "flex", gap: 8, marginBottom: hasConversation ? 8 : 12 }}>
+          {[
+            { id: "normal", label: "Analysis" },
+            { id: "walkthrough", label: "Walkthrough" },
+          ].map((option) => (
+            <button
+              key={option.id}
+              onClick={() => setMode(option.id as "normal" | "walkthrough")}
+              style={{
+                border: "1px solid #cbd5e1",
+                background: mode === option.id ? "#0f172a" : "#ffffff",
+                color: mode === option.id ? "#ffffff" : "#475569",
+                borderRadius: 999,
+                padding: "6px 10px",
+                fontSize: 11,
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
         <div style={{ fontSize: 10, color: "#94a3b8", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: hasConversation ? 6 : 10 }}>
           Example Questions
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: hasConversation ? 6 : 8 }}>
-          {EXAMPLE_QUESTIONS.map((question) => (
+          {exampleQuestions.map((question) => (
             <button
               key={question}
               onClick={() => {
@@ -322,6 +420,7 @@ export default function AnalystAIPanel({
             onClick={() => {
               setMessages([]);
               setError(null);
+              onAnnotationsChange([]);
             }}
             style={{
               border: "1px solid #cbd5e1",
@@ -354,6 +453,27 @@ export default function AnalystAIPanel({
                 <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6, opacity: 0.75 }}>
                   {message.role === "assistant" ? "Analyst AI" : "You"}
                 </div>
+                {message.role === "assistant" && message.annotations && message.annotations.length > 0 ? (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+                    {message.annotations.map((annotation, annotationIndex) => (
+                      <div
+                        key={`${annotation.targetType}-${annotationIndex}`}
+                        style={{
+                          border: "1px solid #cbd5e1",
+                          background: "#ffffff",
+                          color: "#475569",
+                          borderRadius: 999,
+                          padding: "4px 8px",
+                          fontSize: 10,
+                          fontWeight: 700,
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {annotation.label || `${annotation.targetType} highlight`}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
                 <div style={{ fontSize: 12, lineHeight: 1.65, whiteSpace: message.role === "assistant" ? "normal" : "pre-wrap" }}>
                   {message.role === "assistant" ? renderMarkdown(message.text) : message.text}
                 </div>

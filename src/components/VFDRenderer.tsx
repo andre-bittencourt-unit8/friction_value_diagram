@@ -41,7 +41,7 @@ import { boundingBox } from "../lib/layout";
 import OverviewPanel from "./OverviewPanel";
 import InspectPanel from "./InspectPanel";
 import GuidePanel from "./GuidePanel";
-import AnalystAIPanel from "./AnalystAIPanel";
+import AnalystAIPanel, { type AnalystAnnotation } from "./AnalystAIPanel";
 
 interface VFDRendererProps {
   vfdData: any;
@@ -106,11 +106,68 @@ export default function VFDRenderer({
     }
   }, []);
 
+  const getAnnotationVisual = useCallback((style: AnalystAnnotation["style"]) => {
+    switch (style) {
+      case "bottleneck":
+        return { stroke: "#d97706", fill: "rgba(245, 158, 11, 0.12)", glow: "rgba(245, 158, 11, 0.22)" };
+      case "risk":
+        return { stroke: "#dc2626", fill: "rgba(239, 68, 68, 0.12)", glow: "rgba(239, 68, 68, 0.22)" };
+      case "opportunity":
+        return { stroke: "#16a34a", fill: "rgba(34, 197, 94, 0.12)", glow: "rgba(34, 197, 94, 0.22)" };
+      case "change-impact":
+        return { stroke: "#7c3aed", fill: "rgba(139, 92, 246, 0.12)", glow: "rgba(139, 92, 246, 0.22)" };
+      case "focus":
+      default:
+        return { stroke: "#2563eb", fill: "rgba(59, 130, 246, 0.12)", glow: "rgba(59, 130, 246, 0.22)" };
+    }
+  }, []);
+
+  const wrapAnnotationText = useCallback((text: string) => {
+    const normalized = text.trim().replace(/\s+/g, " ");
+    if (!normalized) return [];
+
+    const maxCharsPerLine = 28;
+    const words = normalized.split(" ");
+    const lines: string[] = [];
+    let current = "";
+
+    words.forEach((word) => {
+      const candidate = current ? `${current} ${word}` : word;
+      if (candidate.length <= maxCharsPerLine) {
+        current = candidate;
+        return;
+      }
+
+      if (current) {
+        lines.push(current);
+      }
+
+      if (word.length <= maxCharsPerLine) {
+        current = word;
+        return;
+      }
+
+      let remainder = word;
+      while (remainder.length > maxCharsPerLine) {
+        lines.push(`${remainder.slice(0, maxCharsPerLine - 1)}-`);
+        remainder = remainder.slice(maxCharsPerLine - 1);
+      }
+      current = remainder;
+    });
+
+    if (current) {
+      lines.push(current);
+    }
+
+    return lines.slice(0, 4);
+  }, []);
+
   // ── State ──────────────────────────────────────────────────────────────
   const [layers, setLayers] = useState<Set<string>>(new Set(["value", "enabling", "waste"]));
   const [selectedElement, setSelectedElement] = useState<any>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [hoveredElement, setHoveredElement] = useState<string | null>(null);
+  const [analystAnnotations, setAnalystAnnotations] = useState<AnalystAnnotation[]>([]);
   const [panelTab, setPanelTab] = useState<"overview" | "guide" | "inspect" | "analyst">("guide");
   const [pan, setPan] = useState({ x: 20, y: 20 });
   const [zoom, setZoom] = useState(0.8);
@@ -130,6 +187,7 @@ export default function VFDRenderer({
   const canvasRef = useRef<HTMLDivElement>(null);
   const hasAutoCenteredRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const preAnnotationLayersRef = useRef<Set<string> | null>(null);
 
   // ── Computed lookups ───────────────────────────────────────────────────
   const nodeMap = useMemo(() => {
@@ -139,6 +197,56 @@ export default function VFDRenderer({
     });
     return map;
   }, [vfdData.nodes]);
+
+  const getRequiredLayersForAnnotation = useCallback(
+    (annotation: AnalystAnnotation) => {
+      const required = new Set<string>();
+
+      const addNodeLayer = (nodeId: string) => {
+        const node = nodeMap[nodeId];
+        if (!node) return;
+        if (node.category === "value" && node.state !== "void") required.add("value");
+        if (node.category === "enabling") required.add("enabling");
+        if (node.category === "waste") required.add("waste");
+        if (node.category === "capability" || node.state === "void") required.add("voids");
+      };
+
+      if (annotation.targetType === "node") {
+        annotation.ids.forEach(addNodeLayer);
+      }
+
+      if (annotation.targetType === "flow") {
+        annotation.ids.forEach((flowId) => {
+          const flow = vfdData.flows?.find((entry: any) => entry.id === flowId);
+          if (!flow) return;
+          addNodeLayer(flow.from);
+          addNodeLayer(flow.to);
+        });
+      }
+
+      if (annotation.targetType === "friction") {
+        required.add("friction");
+        annotation.ids.forEach((frictionId) => {
+          const friction = vfdData.frictionPoints?.find((entry: any) => entry.id === frictionId);
+          if (!friction) return;
+          addNodeLayer(friction.primaryNode);
+        });
+      }
+
+      if (annotation.targetType === "loop") {
+        required.add("loops");
+        annotation.ids.forEach((loopId) => {
+          const loop = vfdData.feedbackLoops?.find((entry: any) => entry.id === loopId);
+          if (!loop) return;
+          addNodeLayer(loop.fromNode);
+          addNodeLayer(loop.toNode);
+        });
+      }
+
+      return required;
+    },
+    [nodeMap, vfdData.feedbackLoops, vfdData.flows, vfdData.frictionPoints]
+  );
 
   const svgDimensions = useMemo(() => {
     const allNodes = vfdData.nodes || [];
@@ -309,6 +417,38 @@ export default function VFDRenderer({
     hasAutoCenteredRef.current = true;
   }, [handleCenterView]);
 
+  useEffect(() => {
+    setAnalystAnnotations([]);
+  }, [fileName]);
+
+  useEffect(() => {
+    if (analystAnnotations.length === 0) {
+      if (preAnnotationLayersRef.current) {
+        setLayers(new Set(preAnnotationLayersRef.current));
+        preAnnotationLayersRef.current = null;
+      }
+      return;
+    }
+
+    if (!preAnnotationLayersRef.current) {
+      preAnnotationLayersRef.current = new Set(layers);
+    }
+
+    const requiredLayers = new Set<string>();
+    analystAnnotations.forEach((annotation) => {
+      getRequiredLayersForAnnotation(annotation).forEach((layer) => requiredLayers.add(layer));
+    });
+
+    setLayers((current) => {
+      const next = new Set(current);
+      requiredLayers.forEach((layer) => next.add(layer));
+      if (next.size === current.size && Array.from(next).every((layer) => current.has(layer))) {
+        return current;
+      }
+      return next;
+    });
+  }, [analystAnnotations, getRequiredLayersForAnnotation, layers]);
+
   const handleLoadFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -396,6 +536,43 @@ export default function VFDRenderer({
     if (!fromNode || !toNode) return false;
     return isNodeVisible(fromNode) && isNodeVisible(toNode);
   };
+
+  const renderAnnotationLabel = useCallback(
+    (x: number, y: number, text: string, style: AnalystAnnotation["style"], key: string) => {
+      const visual = getAnnotationVisual(style);
+      const lines = wrapAnnotationText(text);
+      const longestLine = lines.reduce((max, line) => Math.max(max, line.length), 0);
+      const width = Math.max(116, Math.min(320, longestLine * 6.8 + 24));
+      const height = Math.max(22, lines.length * 13 + 10);
+      return (
+        <g key={key} style={{ pointerEvents: "none" }}>
+          <rect
+            x={x - width / 2}
+            y={y}
+            width={width}
+            height={height}
+            rx="11"
+            fill="#ffffff"
+            stroke={visual.stroke}
+            strokeWidth="1.5"
+          />
+          <text x={x} y={y + 13} textAnchor="middle" fontSize="9.5" fontWeight="700" fill={visual.stroke}>
+            {lines.map((line, index) => (
+              <tspan key={`${key}-${index}`} x={x} dy={index === 0 ? 0 : 12}>
+                {line}
+              </tspan>
+            ))}
+          </text>
+        </g>
+      );
+    },
+    [getAnnotationVisual, wrapAnnotationText]
+  );
+
+  const getAnnotationStackOffset = useCallback((index: number) => {
+    const stackOrder = index % 3;
+    return stackOrder * 44;
+  }, []);
 
   // ── Node rendering functions ───────────────────────────────────────────
 
@@ -995,6 +1172,200 @@ export default function VFDRenderer({
     );
   };
 
+  const renderNodeAnnotation = useCallback(
+    (annotation: AnalystAnnotation, nodeId: string, index: number): React.ReactElement | null => {
+      const node = nodeMap[nodeId];
+      if (!node || !isNodeVisible(node)) return null;
+
+      const visual = getAnnotationVisual(annotation.style);
+      const width = node.category === "waste" ? WASTE_WIDTH : NODE_WIDTH;
+      const height = node.category === "waste" ? WASTE_HEIGHT : NODE_HEIGHT;
+      const pad = node.category === "waste" ? 7 : 8;
+
+      return (
+        <g key={`annotation-node-${nodeId}-${index}`} style={{ pointerEvents: "none" }}>
+          <rect
+            x={node.x - pad}
+            y={node.y - pad}
+            width={width + pad * 2}
+            height={height + pad * 2}
+            rx={12}
+            fill={visual.fill}
+            stroke={visual.glow}
+            strokeWidth="10"
+            opacity="0.65"
+          />
+          <rect
+            x={node.x - pad}
+            y={node.y - pad}
+            width={width + pad * 2}
+            height={height + pad * 2}
+            rx={12}
+            fill="none"
+            stroke={visual.stroke}
+            strokeWidth="3"
+            strokeDasharray={annotation.style === "change-impact" ? "8 5" : undefined}
+          />
+          {annotation.label
+            ? renderAnnotationLabel(
+                node.x + width / 2,
+                node.y - pad - 24 - getAnnotationStackOffset(index),
+                annotation.label,
+                annotation.style,
+                `annotation-node-label-${nodeId}-${index}`
+              )
+            : null}
+        </g>
+      );
+    },
+    [getAnnotationStackOffset, getAnnotationVisual, isNodeVisible, nodeMap, renderAnnotationLabel]
+  );
+
+  const renderFlowAnnotation = useCallback(
+    (annotation: AnalystAnnotation, flowId: string, index: number): React.ReactElement | null => {
+      const flow = vfdData.flows?.find((entry: any) => entry.id === flowId);
+      if (!flow || !isFlowVisible(flow)) return null;
+
+      const geometry = getFlowGeometry(flow);
+      if (!geometry) return null;
+
+      const visual = getAnnotationVisual(annotation.style);
+      const { fromPt, toPt } = geometry;
+      const path = getBezierPath(fromPt.x, fromPt.y, toPt.x, toPt.y);
+
+      return (
+        <g key={`annotation-flow-${flowId}-${index}`} style={{ pointerEvents: "none" }}>
+          <path d={path} stroke={visual.glow} strokeWidth="10" fill="none" strokeLinecap="round" opacity="0.5" />
+          <path
+            d={path}
+            stroke={visual.stroke}
+            strokeWidth="4"
+            fill="none"
+            strokeLinecap="round"
+            strokeDasharray={annotation.style === "change-impact" ? "8 5" : undefined}
+            opacity="0.95"
+          />
+          {annotation.label
+            ? renderAnnotationLabel(
+                (fromPt.x + toPt.x) / 2,
+                (fromPt.y + toPt.y) / 2 - 24 - getAnnotationStackOffset(index),
+                annotation.label,
+                annotation.style,
+                `annotation-flow-label-${flowId}-${index}`
+              )
+            : null}
+        </g>
+      );
+    },
+    [getAnnotationStackOffset, getAnnotationVisual, isFlowVisible, renderAnnotationLabel, vfdData.flows]
+  );
+
+  const renderFrictionAnnotation = useCallback(
+    (annotation: AnalystAnnotation, frictionId: string, index: number): React.ReactElement | null => {
+      const friction = vfdData.frictionPoints?.find((entry: any) => entry.id === frictionId);
+      const primaryNode = friction ? nodeMap[friction.primaryNode] : null;
+      if (!friction || !primaryNode || !isNodeVisible(primaryNode)) return null;
+
+      const visual = getAnnotationVisual(annotation.style);
+      const nodeCenter = getNodeCenter(primaryNode);
+      const cx = nodeCenter.x + NODE_WIDTH / 2 + 16;
+      const cy = nodeCenter.y - (NODE_HEIGHT / 2 - 12);
+      const label = annotation.label || friction.title || "Friction hotspot";
+      const labelY = cy - FRICTION_BADGE_RADIUS - 36 - getAnnotationStackOffset(index);
+
+      return (
+        <g key={`annotation-friction-${frictionId}-${index}`} style={{ pointerEvents: "none" }}>
+          <path
+            d={`M ${cx} ${cy - FRICTION_BADGE_RADIUS - 8} L ${cx} ${labelY + 24}`}
+            stroke={visual.stroke}
+            strokeWidth="2"
+            strokeDasharray={annotation.style === "change-impact" ? "6 4" : undefined}
+            opacity="0.85"
+          />
+          <circle
+            cx={cx}
+            cy={cy}
+            r={FRICTION_BADGE_RADIUS + 7}
+            fill={visual.fill}
+            stroke={visual.glow}
+            strokeWidth="7"
+            opacity="0.7"
+          />
+          <circle
+            cx={cx}
+            cy={cy}
+            r={FRICTION_BADGE_RADIUS + 7}
+            fill="#ffffff"
+            stroke={visual.stroke}
+            strokeWidth="3"
+            strokeDasharray={annotation.style === "change-impact" ? "6 4" : undefined}
+          />
+          {renderAnnotationLabel(cx, labelY, label, annotation.style, `annotation-friction-label-${frictionId}-${index}`)}
+        </g>
+      );
+    },
+    [getAnnotationStackOffset, getAnnotationVisual, isNodeVisible, nodeMap, renderAnnotationLabel, vfdData.frictionPoints]
+  );
+
+  const renderLoopAnnotation = useCallback(
+    (annotation: AnalystAnnotation, loopId: string, index: number): React.ReactElement | null => {
+      const loop = vfdData.feedbackLoops?.find((entry: any) => entry.id === loopId);
+      const fromNode = loop ? nodeMap[loop.fromNode] : null;
+      const toNode = loop ? nodeMap[loop.toNode] : null;
+      if (!loop || !fromNode || !toNode || !isNodeVisible(fromNode) || !isNodeVisible(toNode)) return null;
+
+      const visual = getAnnotationVisual(annotation.style);
+      const fromCenter = getNodeCenter(fromNode);
+      const toCenter = getNodeCenter(toNode);
+      const midX = (fromCenter.x + toCenter.x) / 2;
+      const midY = Math.min(fromCenter.y, toCenter.y) - 60;
+      const labelY = 0.25 * fromCenter.y + 0.5 * midY + 0.25 * toCenter.y;
+
+      return (
+        <g key={`annotation-loop-${loopId}-${index}`} style={{ pointerEvents: "none" }}>
+          <path d={`M ${fromCenter.x} ${fromCenter.y} Q ${midX} ${midY} ${toCenter.x} ${toCenter.y}`} stroke={visual.glow} strokeWidth="10" fill="none" opacity="0.5" />
+          <path
+            d={`M ${fromCenter.x} ${fromCenter.y} Q ${midX} ${midY} ${toCenter.x} ${toCenter.y}`}
+            stroke={visual.stroke}
+            strokeWidth="4"
+            fill="none"
+            strokeDasharray={annotation.style === "change-impact" ? "8 5" : undefined}
+            opacity="0.95"
+          />
+          {annotation.label
+            ? renderAnnotationLabel(
+                midX,
+                labelY - 30 - getAnnotationStackOffset(index),
+                annotation.label,
+                annotation.style,
+                `annotation-loop-label-${loopId}-${index}`
+              )
+            : null}
+        </g>
+      );
+    },
+    [getAnnotationStackOffset, getAnnotationVisual, isNodeVisible, nodeMap, renderAnnotationLabel, vfdData.feedbackLoops]
+  );
+
+  const renderAnalystAnnotations = useCallback(() => {
+    if (analystAnnotations.length === 0) return null;
+
+    return analystAnnotations.flatMap((annotation, annotationIndex) =>
+      annotation.ids.map((id, idIndex) => {
+        if (annotation.targetType === "node") {
+          return renderNodeAnnotation(annotation, id, annotationIndex * 10 + idIndex);
+        }
+        if (annotation.targetType === "flow") {
+          return renderFlowAnnotation(annotation, id, annotationIndex * 10 + idIndex);
+        }
+        if (annotation.targetType === "friction") {
+          return renderFrictionAnnotation(annotation, id, annotationIndex * 10 + idIndex);
+        }
+        return renderLoopAnnotation(annotation, id, annotationIndex * 10 + idIndex);
+      })
+    );
+  }, [analystAnnotations, renderFlowAnnotation, renderFrictionAnnotation, renderLoopAnnotation, renderNodeAnnotation]);
+
   // ── Main render ────────────────────────────────────────────────────────
   const visibleNodes = vfdData.nodes?.filter(isNodeVisible) || [];
   const visibleFlows = vfdData.flows?.filter(isFlowVisible) || [];
@@ -1186,6 +1557,9 @@ export default function VFDRenderer({
 
             {/* Friction badges (on top) */}
             {visibleFrictions && visibleFrictions.map(renderFrictionBadge).filter(Boolean)}
+
+            {/* Analyst walkthrough overlay */}
+            {renderAnalystAnnotations()}
           </svg>
         </div>
       </div>
@@ -1259,25 +1633,29 @@ export default function VFDRenderer({
               boxSizing: "border-box",
             }}
           >
-            {panelTab === "overview" ? (
-              <OverviewPanel vfdData={vfdData} />
-            ) : panelTab === "analyst" ? (
+            <div style={{ display: panelTab === "guide" ? "block" : "none", height: "100%" }}>
+              <GuidePanel />
+            </div>
+            <div style={{ display: panelTab === "analyst" ? "block" : "none", height: "100%" }}>
               <AnalystAIPanel
                 vfdData={vfdData}
                 fileName={fileName}
                 selectedElement={currentSelectedElement}
                 selectedType={selectedType}
+                onAnnotationsChange={setAnalystAnnotations}
               />
-            ) : panelTab === "inspect" ? (
+            </div>
+            <div style={{ display: panelTab === "inspect" ? "block" : "none", height: "100%" }}>
               <InspectPanel
                 element={currentSelectedElement}
                 elementType={selectedType}
                 vfdData={vfdData}
                 onElementChange={onElementChange}
               />
-            ) : (
-              <GuidePanel />
-            )}
+            </div>
+            <div style={{ display: panelTab === "overview" ? "block" : "none", height: "100%" }}>
+              <OverviewPanel vfdData={vfdData} />
+            </div>
           </div>
       </div>
     </div>
