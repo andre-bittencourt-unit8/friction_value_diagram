@@ -217,14 +217,26 @@ export default function AnalystAIPanel({
         }),
       });
 
-      const responseJson = await response.json();
+      const rawBody = await response.text();
+      let responseJson: any = null;
+
+      try {
+        responseJson = rawBody ? JSON.parse(rawBody) : null;
+      } catch {
+        responseJson = null;
+      }
+
       if (!response.ok) {
-        throw new Error(responseJson?.error || "The request failed.");
+        throw new Error(
+          responseJson?.error ||
+            rawBody ||
+            `The request failed with status ${response.status}.`
+        );
       }
 
       const assistantText = responseJson?.text;
       if (!assistantText) {
-        throw new Error("No assistant text was returned.");
+        throw new Error(rawBody || "No assistant text was returned.");
       }
 
       setMessages((current) => [...current, { role: "assistant", text: assistantText }]);
